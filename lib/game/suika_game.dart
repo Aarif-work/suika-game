@@ -2,6 +2,7 @@ import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'components/wall.dart';
 import 'components/fruit.dart';
@@ -22,17 +23,20 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
         );
 
   // Input state
-  Vector2 _pointerPosition = Vector2(3.0, 1.0); // Start at center (approx)
+  Vector2 _pointerPosition = Vector2(3.0, 1.0);
   FruitType? _currentFruitType;
-  FruitType _nextFruitType = FruitType.cherry;
+  final List<FruitType> _nextFruitQueue = []; // Queue of next 3 fruits
   bool _canDrop = true;
 
   FruitType? get currentFruitType => _currentFruitType;
-  FruitType get nextFruitType => _nextFruitType;
+  List<FruitType> get nextFruitQueue => List.unmodifiable(_nextFruitQueue);
   Vector2 get pointerPosition => _pointerPosition;
   int get score => _score;
 
   int _score = 0;
+  int _highScore = 0;
+  
+  int get highScore => _highScore;
   bool _isGameOver = false;
 
   @override
@@ -49,10 +53,12 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   }
   
   void _checkGameOver() {
+    const deadlineY = 0.8; // Deadline line near top
+    
     for (final child in world.children) {
       if (child is Fruit) {
-        // If fruit is above the line (y < 1.0) and alive for > 2s
-        if (child.timeAlive > 2.0 && child.body.position.y < 1.0) {
+        // If fruit is above the deadline line and alive for > 2s
+        if (child.timeAlive > 2.0 && child.body.position.y < deadlineY) {
            _gameOver();
            return;
         }
@@ -63,6 +69,19 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   void _gameOver() {
     _isGameOver = true;
     _canDrop = false;
+    
+    // Update high score
+    if (_score > _highScore) {
+      _highScore = _score;
+    }
+    
+    // Print final score to console
+    print('========================================');
+    print('GAME OVER!');
+    print('Final Score: $_score');
+    print('High Score: $_highScore');
+    print('========================================');
+    
     pauseEngine();
     overlays.add('GameOver');
   }
@@ -86,9 +105,9 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   // ... merge logic ...
 
 
-  // World dimensions in meters
-  static const double worldWidth = 6.0;
-  static const double worldHeight = 9.0;
+  // World dimensions in meters - responsive to screen
+  static const double worldWidth = 5.0;
+  static const double worldHeight = 7.0;
   // Scale factor (Pixels per Meter) - dynamic
   double _scale = 100.0;
 
@@ -118,11 +137,10 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
     // Pre-load audio
     try {
       await FlameAudio.audioCache.loadAll([
-        'click.mp3',
         ...FruitType.values.map((f) => f.audioFile),
       ]);
     } catch (e) {
-      print('Error loading audio: $e');
+      // Audio loading failed
     }
 
     camera.viewfinder.anchor = Anchor.center;
@@ -143,10 +161,25 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   }
 
   void _spawnNextFruit() {
-    _currentFruitType = _nextFruitType;
-    final nextIndex = (DateTime.now().millisecondsSinceEpoch % 3);
-    _nextFruitType = FruitType.values[nextIndex];
+    // Initialize queue if empty
+    if (_nextFruitQueue.isEmpty) {
+      for (int i = 0; i < 3; i++) {
+        _nextFruitQueue.add(_generateRandomFruit());
+      }
+    }
+    
+    // Take first fruit from queue
+    _currentFruitType = _nextFruitQueue.removeAt(0);
+    
+    // Add new fruit to end of queue
+    _nextFruitQueue.add(_generateRandomFruit());
+    
     _canDrop = true;
+  }
+  
+  FruitType _generateRandomFruit() {
+    final nextIndex = (DateTime.now().millisecondsSinceEpoch % 3);
+    return FruitType.values[nextIndex];
   }
 
   @override
@@ -163,13 +196,6 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   @override
   void onTapDown(TapDownEvent event) {
     if (!_canDrop || _currentFruitType == null) return;
-    
-    // Play drop sound
-    try {
-      FlameAudio.play('click.mp3');
-    } catch (e) {
-      // ignore
-    }
 
     // Update position from tap event
     double x = event.devicePosition.x / _scale;
@@ -193,14 +219,57 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   void render(Canvas canvas) {
     super.render(canvas);
     
-    // Render current fruit (Spawner)
-    if (_currentFruitType != null) {
-      // We need to render this in world space.
-      // Super.render renders the world via camera.
-      // If we render here, we are drawing on top of the generic canvas (screen space?) OR world space?
-      // Forge2DGame.render calls super.render which renders components.
-      // If we want to draw in world space, we should add a component.
+    // Draw deadline line (game over line) - very visible at top
+    const deadlineY = 0.8;
+    
+    // Red danger line
+    final linePaint = Paint()
+      ..color = const Color(0xFFff0000)
+      ..strokeWidth = 0.1
+      ..style = PaintingStyle.stroke;
+    
+    canvas.drawLine(
+      const Offset(0, deadlineY),
+      Offset(worldWidth, deadlineY),
+      linePaint,
+    );
+    
+    // Yellow warning stripes above the line
+    final stripePaint = Paint()
+      ..color = const Color(0xFFffff00).withOpacity(0.7)
+      ..strokeWidth = 0.06;
+    
+    const stripeWidth = 0.3;
+    const stripeSpace = 0.3;
+    double startX = 0.0;
+    
+    while (startX < worldWidth) {
+      canvas.drawLine(
+        Offset(startX, deadlineY - 0.08),
+        Offset((startX + stripeWidth).clamp(0, worldWidth), deadlineY - 0.08),
+        stripePaint,
+      );
+      startX += stripeWidth + stripeSpace;
     }
+    
+    // Draw "DANGER" label
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'DANGER ZONE',
+        style: TextStyle(
+          fontSize: 0.15,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFff0000),
+          letterSpacing: 0.02,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset((worldWidth - textPainter.width) / 2, deadlineY - 0.35),
+    );
   }
 
   void _processMerges() {
@@ -240,7 +309,7 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
         try {
           FlameAudio.play(nextType.audioFile);
         } catch (e) {
-          print('Error playing audio: $e');
+          // Audio playback failed
         }
       }
     }

@@ -45,7 +45,7 @@ class Fruit extends BodyComponent with ContactCallbacks {
     try {
       _sprite = await game.loadSprite(type.spriteFile);
     } catch (e) {
-      print('Error loading sprite: $e');
+      // Sprite loading failed - will use fallback emoji
     }
   }
 

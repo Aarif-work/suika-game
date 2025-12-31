@@ -21,7 +21,7 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             // Top HUD
@@ -29,33 +29,59 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
               children: [
                 // Score Card
                 _HUDCard(
-                  child: Row(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.star,
-                        color: Color(0xFFf4a261),
-                        size: 20,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: Color(0xFFf4a261),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          StreamBuilder<int>(
+                            stream: _scoreStream(),
+                            builder: (context, snapshot) {
+                              return Text(
+                                '${snapshot.data ?? widget.game.score}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFe76f51),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      StreamBuilder<int>(
-                        stream: _scoreStream(),
-                        builder: (context, snapshot) {
-                          return Text(
-                            '${snapshot.data ?? widget.game.score}',
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.emoji_events,
+                            color: Color(0xFFffd700),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Best: ${widget.game.highScore}',
                             style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFe76f51),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6d6875),
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const Spacer(),
-                // Next Fruit Preview
+                // Next Fruits Queue
                 _HUDCard(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -68,32 +94,35 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
                           color: Color(0xFF2a9d8f),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: widget.game.nextFruitType.color,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: widget.game.nextFruitType.color.withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 2,
+                      const SizedBox(height: 8),
+                      ...widget.game.nextFruitQueue.map((fruit) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: fruit.color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            widget.game.nextFruitType.emoji,
-                            style: const TextStyle(fontSize: 20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: fruit.color.withOpacity(0.3),
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              fruit.emoji,
+                              style: const TextStyle(fontSize: 18),
+                            ),
                           ),
                         ),
-                      ),
+                      )),
                     ],
                   ),
                 ),

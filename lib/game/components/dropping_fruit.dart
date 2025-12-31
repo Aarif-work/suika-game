@@ -26,7 +26,7 @@ class DroppingFruit extends PositionComponent with HasGameReference<SuikaGame> {
     try {
       _sprite = await game.loadSprite(type.spriteFile);
     } catch (e) {
-      print('Error loading sprite: $e');
+      // Sprite loading failed
     }
   }
 

@@ -1,40 +1,73 @@
 import 'package:flame/components.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import '../suika_game.dart';
+import '../constants.dart';
 
-class Spawner extends PositionComponent with HasGameRef<SuikaGame> {
+class Spawner extends PositionComponent with HasGameReference<SuikaGame> {
+  Sprite? _currentSprite;
+  FruitType? _lastFruitType;
+
   @override
-  void render(Canvas canvas) {
-    final fruitType = gameRef.currentFruitType;
-    if (fruitType == null) return;
-    
-    // We are implementing simple render logic here
-    // The component position should assume world coordinates if added to world?
-    // Or if added to HUD?
-    // We want it to be in the world so it aligns with physics bodies.
-    
-    final radius = fruitType.radius;
-    final paint = Paint()..color = fruitType.color.withOpacity(0.5); // Ghost effect
-    
-    // Draw at the pointer position
-    // Since this component might not be moving, we should technically update "position" in update()
-    // But we can just draw at gameRef.pointerPosition if we want.
-    // Better practice: update position in update cycle.
-    
-    canvas.drawCircle(Offset.zero, radius, paint);
-    
-    // Guide line
-    final linePaint = Paint()
-      ..color = const Color(0xFFFFFFFF).withOpacity(0.2)
-      ..strokeWidth = 0.05;
-    canvas.drawLine(Offset.zero, Offset(0, 10), linePaint); // Draw line down
+  Future<void> onLoad() async {
+    await super.onLoad();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    if (gameRef.currentFruitType != null) {
-        position = gameRef.pointerPosition;
+    
+    // Update position to follow pointer
+    if (game.currentFruitType != null) {
+      position = game.pointerPosition.clone();
+      
+      // Load sprite if fruit type changed
+      if (_lastFruitType != game.currentFruitType) {
+        _lastFruitType = game.currentFruitType;
+        _loadSprite();
+      }
+    }
+  }
+
+  Future<void> _loadSprite() async {
+    if (_lastFruitType != null) {
+      try {
+        _currentSprite = await game.loadSprite(_lastFruitType!.spriteFile);
+      } catch (e) {
+        // Sprite loading failed
+      }
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    
+    if (game.currentFruitType != null && _currentSprite != null) {
+      final radius = game.currentFruitType!.radius;
+      final size = radius * 1.9; // Match fruit rendering size
+      
+      // Draw semi-transparent preview sprite
+      canvas.save();
+      
+      final paint = Paint()..color = Colors.white.withOpacity(0.8);
+      _currentSprite!.render(
+        canvas,
+        position: Vector2(-size / 2, -size / 2),
+        size: Vector2.all(size),
+        overridePaint: paint,
+      );
+      
+      canvas.restore();
+      
+      // Draw vertical guide line
+      final linePaint = Paint()
+        ..color = Colors.white.withOpacity(0.3)
+        ..strokeWidth = 0.03;
+      canvas.drawLine(
+        Offset(0, radius),
+        Offset(0, 8.0), // Line down to bottom
+        linePaint,
+      );
     }
   }
 }

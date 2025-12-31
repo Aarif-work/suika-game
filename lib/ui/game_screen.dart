@@ -27,19 +27,50 @@ class _GameScreenState extends State<GameScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFfff1eb), Color(0xFFace0f9)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF667eea), // Purple
+              Color(0xFF764ba2), // Deep purple
+              Color(0xFFf093fb), // Pink
+              Color(0xFF4facfe), // Blue
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: Stack(
           children: [
-            GameWidget<SuikaGame>.controlled(
-              gameFactory: () => game,
-              overlayBuilderMap: {
-                'GameOver': (context, game) => GameOverOverlay(game: game),
-                'Pause': (context, game) => PauseOverlay(game: game),
-              },
+            // Game area with padding and background
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1a1a2e),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(17),
+                    child: GameWidget<SuikaGame>.controlled(
+                      gameFactory: () => game,
+                      overlayBuilderMap: {
+                        'GameOver': (context, game) => GameOverOverlay(game: game),
+                        'Pause': (context, game) => PauseOverlay(game: game),
+                      },
+                    ),
+                  ),
+                ),
+              ),
             ),
             // Enhanced HUD overlay
             EnhancedHUD(game: game),

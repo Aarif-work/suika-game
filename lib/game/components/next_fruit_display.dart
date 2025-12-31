@@ -18,7 +18,9 @@ class NextFruitDisplay extends PositionComponent with HasGameReference<SuikaGame
   @override
   void render(Canvas canvas) {
     // Draw fruit emoji only for next fruit display
-    final nextFruit = game.nextFruitType;
+    if (game.nextFruitQueue.isEmpty) return;
+    
+    final nextFruit = game.nextFruitQueue.first;
     final radius = nextFruit.radius * 15;
     
     // Emoji only
