@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
-import 'package:flutter/widgets.dart'; // For Canvas/Paint
-import '../logic/fruit_manager.dart';
+import 'package:flutter/material.dart';
+import '../constants.dart';
 import '../suika_game.dart';
 
 class Fruit extends BodyComponent with ContactCallbacks {
@@ -37,20 +37,49 @@ class Fruit extends BodyComponent with ContactCallbacks {
     return world.createBody(bodyDef)..createFixture(fixtureDef);
   }
   
+  Sprite? _sprite;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    try {
+      _sprite = await game.loadSprite(type.spriteFile);
+    } catch (e) {
+      print('Error loading sprite: $e');
+    }
+  }
 
   @override
   void render(Canvas canvas) {
-    // ... existing render code ...
-    final radius = type.radius;
-    final paint = Paint()..color = type.color;
-    canvas.drawCircle(Offset.zero, radius, paint);
-    
-    // Draw a border
-    final borderPaint = Paint()
-      ..color = const Color(0xFF000000)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.02; 
-    canvas.drawCircle(Offset.zero, radius, borderPaint);
+    if (_sprite != null) {
+      final radius = type.radius;
+      // Sprite size = 1.9x radius (fits within 2.0x diameter physics body)
+      final size = radius * 1.9;
+      _sprite!.render(
+        canvas,
+        position: Vector2(-size / 2, -size / 2),
+        size: Vector2.all(size),
+      );
+    } else {
+      // Fallback to emoji if sprite fails
+      final radius = type.radius;
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: type.emoji,
+          style: TextStyle(
+            fontSize: radius * 1.75,
+            fontFamily: 'Noto Color Emoji',
+            height: 1.0, 
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(-textPainter.width / 2, -textPainter.height / 2),
+      );
+    }
   }
 
   @override

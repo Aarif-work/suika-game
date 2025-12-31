@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import '../suika_game.dart';
-import '../logic/fruit_manager.dart';
+import '../constants.dart';
 
 class NextFruitDisplay extends PositionComponent with HasGameReference<SuikaGame> {
   NextFruitDisplay() : super(position: Vector2(300, 50), anchor: Anchor.topRight); // Example pos
@@ -17,27 +17,33 @@ class NextFruitDisplay extends PositionComponent with HasGameReference<SuikaGame
 
   @override
   void render(Canvas canvas) {
-    // Draw background box
-    final bgPaint = Paint()..color = const Color(0xFF333333);
-    final rect = Rect.fromCircle(center: Offset.zero, radius: 40);
-    canvas.drawRect(rect, bgPaint);
-    
-    // Draw text "Next"
-    // Text rendering in Flame is explicit. Let's skip text for now or draw simple.
-    
+    // Draw fruit emoji only for next fruit display
     final nextFruit = game.nextFruitType;
-    final radius = nextFruit.radius * 20; // Scale up for UI? Or keep relative?
-    // Our physics radius is small (0.2). In pixels that is 0.2 * 100 = 20 pixels.
+    final radius = nextFruit.radius * 15;
     
-    final paint = Paint()..color = nextFruit.color;
-    canvas.drawCircle(Offset.zero, radius, paint);
+    // Emoji only
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: nextFruit.emoji,
+        style: TextStyle(
+          fontSize: radius * 1.5,
+          fontFamily: 'Noto Color Emoji',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(-50 - textPainter.width / 2, 60 - textPainter.height / 2),
+    );
   }
   
-  // Need to update position on resize?
   @override
   void onGameResize(Vector2 size) {
      super.onGameResize(size);
-     position = Vector2(size.x - 50, 60);
+     // Keep it anchored to top right with some margin
+     position = Vector2(size.x - 20, 20);
   }
 }
 

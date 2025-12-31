@@ -1,14 +1,16 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'game/suika_game.dart';
-
-import 'game/components/game_over_overlay.dart';
+import 'ui/main_menu.dart';
 
 void main() {
-  runApp(GameWidget<SuikaGame>.controlled(
-    gameFactory: SuikaGame.new,
-    overlayBuilderMap: {
-      'GameOver': (context, game) => GameOverOverlay(game: game),
-    },
-  ));
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Suika Game',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        fontFamily: 'Roboto',
+      ),
+      home: const MainMenu(),
+    ),
+  );
 }

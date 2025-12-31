@@ -1,13 +1,14 @@
 import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flame/components.dart';
-import 'dart:ui'; // For Canvas
+import 'package:flame_audio/flame_audio.dart';
+import 'dart:ui';
 import 'components/wall.dart';
 import 'components/fruit.dart';
+import 'components/merge_effect.dart';
 import 'components/spawner.dart';
 import 'components/next_fruit_display.dart';
 import 'components/score_display.dart';
-import 'logic/fruit_manager.dart';
 import 'constants.dart';
 
 class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
@@ -100,8 +101,9 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
     
     world.add(Spawner());
     
-    camera.viewport.add(NextFruitDisplay());
-    camera.viewport.add(ScoreDisplay());
+    // HUD is handled by EnhancedHUD widget overlay in GameScreen
+    // camera.viewport.add(NextFruitDisplay());
+    // camera.viewport.add(ScoreDisplay());
 
     // Setup Walls using world dimensions
     // Floor
@@ -113,6 +115,16 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
 
     // Camera setup will be handled in onGameResize initially called by engine? 
     // Or we force it here partially.
+    // Pre-load audio
+    try {
+      await FlameAudio.audioCache.loadAll([
+        'click.mp3',
+        ...FruitType.values.map((f) => f.audioFile),
+      ]);
+    } catch (e) {
+      print('Error loading audio: $e');
+    }
+
     camera.viewfinder.anchor = Anchor.center;
   }
   
@@ -120,21 +132,13 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     
-    // Calculate scale to fit worldWidth/Height into size with padding?
-    // Let's maximize zoom such that it fits.
-    // scaleX = size.x / worldWidth
-    // scaleY = size.y / worldHeight
-    
     final scaleX = size.x / worldWidth;
     final scaleY = size.y / worldHeight;
     
-    // Use the smaller scale to ensure it fits entirely
     _scale = (scaleX < scaleY) ? scaleX : scaleY;
     
-    // Apply zoom
     camera.viewfinder.zoom = _scale;
     
-    // Center camera on the world center
     camera.viewfinder.position = Vector2(worldWidth / 2, worldHeight / 2);
   }
 
@@ -149,10 +153,8 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   void onMouseMove(PointerHoverInfo info) {
     final screenPosition = info.eventPosition.widget;
     
-    // Use dynamic scale
     double x = screenPosition.x / _scale;
     
-    // Clamp to walls
     x = x.clamp(0.2, worldWidth - 0.2);
     
     _pointerPosition = Vector2(x, 1.0);
@@ -162,7 +164,14 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   void onTapDown(TapDownEvent event) {
     if (!_canDrop || _currentFruitType == null) return;
     
-    // Update position from tap event for robustness
+    // Play drop sound
+    try {
+      FlameAudio.play('click.mp3');
+    } catch (e) {
+      // ignore
+    }
+
+    // Update position from tap event
     double x = event.devicePosition.x / _scale;
     x = x.clamp(0.2, worldWidth - 0.2);
     _pointerPosition = Vector2(x, 1.0);
@@ -170,7 +179,7 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
     _canDrop = false;
     final position = _pointerPosition.clone();
     
-    // Create physical fruit
+    // Create physical fruit directly
     world.add(Fruit(_currentFruitType!, position));
     _currentFruitType = null;
 
@@ -209,6 +218,13 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
       // Calculate midpoint
       final midPoint = (a.body.position + b.body.position) / 2;
       
+      // Add merge effect
+      world.add(MergeEffect(
+        fromType: a.type,
+        toType: FruitType.values[a.type.index + 1],
+        mergePosition: midPoint,
+      ));
+      
       // Remove old fruits
       world.remove(a);
       world.remove(b);
@@ -219,6 +235,13 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
         final nextType = FruitType.values[nextIndex];
         world.add(Fruit(nextType, midPoint));
         _score += nextType.score;
+        
+        // Play merge sound
+        try {
+          FlameAudio.play(nextType.audioFile);
+        } catch (e) {
+          print('Error playing audio: $e');
+        }
       }
     }
     _merges.clear();
