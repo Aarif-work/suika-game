@@ -81,52 +81,6 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
                   ),
                 ),
                 const Spacer(),
-                // Next Fruits Queue
-                _HUDCard(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'NEXT',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2a9d8f),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...widget.game.nextFruitQueue.map((fruit) => Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: fruit.color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: fruit.color.withOpacity(0.3),
-                                blurRadius: 6,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              fruit.emoji,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ),
-                        ),
-                      )),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
                 // Pause Button
                 _HUDButton(
                   icon: Icons.pause,

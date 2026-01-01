@@ -12,7 +12,42 @@ import 'components/next_fruit_display.dart';
 import 'components/score_display.dart';
 import 'constants.dart';
 
-class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
+class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
+
+
+
+  @override
+  void onPanStart(DragStartInfo info) {
+    _updatePointerPosition(info.eventPosition.widget);
+  }
+
+  @override
+  void onPanUpdate(DragUpdateInfo info) {
+    _updatePointerPosition(info.eventPosition.widget);
+  }
+
+  @override
+  void onPanEnd(DragEndInfo info) {
+    if (!_canDrop || _currentFruitType == null) return;
+
+    _canDrop = false;
+    final position = _pointerPosition.clone();
+    
+    // Create physical fruit directly
+    world.add(Fruit(_currentFruitType!, position));
+    _currentFruitType = null;
+
+    // Delay before next spawn
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _spawnNextFruit();
+    });
+  }
+
+  void _updatePointerPosition(Vector2 widgetPosition) {
+    double x = widgetPosition.x / _scale;
+    x = x.clamp(0.2, worldWidth - 0.2);
+    _pointerPosition = Vector2(x, 1.0);
+  }
 
   // Queue for processing merges to avoid physics locking issues
   final List<({Fruit a, Fruit b})> _merges = [];
@@ -21,6 +56,10 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
       : super(
           gravity: Vector2(0, 20),
         );
+
+  @override
+  Color backgroundColor() => Colors.transparent;
+
 
   // Input state
   Vector2 _pointerPosition = Vector2(3.0, 1.0);
@@ -178,7 +217,7 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
   }
   
   FruitType _generateRandomFruit() {
-    final nextIndex = (DateTime.now().millisecondsSinceEpoch % 3);
+    final nextIndex = (DateTime.now().millisecondsSinceEpoch % 4);
     return FruitType.values[nextIndex];
   }
 
@@ -193,27 +232,7 @@ class SuikaGame extends Forge2DGame with TapCallbacks, MouseMovementDetector {
     _pointerPosition = Vector2(x, 1.0);
   }
 
-  @override
-  void onTapDown(TapDownEvent event) {
-    if (!_canDrop || _currentFruitType == null) return;
 
-    // Update position from tap event
-    double x = event.devicePosition.x / _scale;
-    x = x.clamp(0.2, worldWidth - 0.2);
-    _pointerPosition = Vector2(x, 1.0);
-
-    _canDrop = false;
-    final position = _pointerPosition.clone();
-    
-    // Create physical fruit directly
-    world.add(Fruit(_currentFruitType!, position));
-    _currentFruitType = null;
-
-    // Delay before next spawn
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _spawnNextFruit();
-    });
-  }
   
   @override
   void render(Canvas canvas) {

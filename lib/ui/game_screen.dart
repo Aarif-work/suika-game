@@ -37,44 +37,52 @@ class _GameScreenState extends State<GameScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Stack(
-          children: [
-            // Game area with padding and background
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1a1a2e),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Check if device is mobile (narrow width)
+            final isMobile = constraints.maxWidth < 600;
+            
+            // Adjust padding based on device size
+            final horizontalPadding = isMobile ? 0.0 : 16.0;
+            final verticalPadding = isMobile ? 8.0 : 20.0;
+            
+            return Stack(
+              children: [
+                // Game area with responsive padding
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding, 
+                    vertical: verticalPadding
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(17),
-                    child: GameWidget<SuikaGame>.controlled(
-                      gameFactory: () => game,
-                      overlayBuilderMap: {
-                        'GameOver': (context, game) => GameOverOverlay(game: game),
-                        'Pause': (context, game) => PauseOverlay(game: game),
-                      },
+                  child: Center(
+                    child: Container(
+                      width: isMobile ? constraints.maxWidth : null, // Full width on mobile
+                      constraints: BoxConstraints(
+                        maxWidth: 600, // Max width for desktop
+                        maxHeight: constraints.maxHeight - (verticalPadding * 2),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(isMobile ? 0 : 24),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(isMobile ? 0 : 20),
+                        child: GameWidget<SuikaGame>.controlled(
+                          gameFactory: () => game,
+                          overlayBuilderMap: {
+                            'GameOver': (context, game) => GameOverOverlay(game: game),
+                            'Pause': (context, game) => PauseOverlay(game: game),
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            // Enhanced HUD overlay
-            EnhancedHUD(game: game),
-          ],
+                // Enhanced HUD overlay
+                EnhancedHUD(game: game),
+              ],
+            );
+          }
         ),
       ),
     );
