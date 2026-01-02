@@ -17,28 +17,8 @@ class NextFruitDisplay extends PositionComponent with HasGameReference<SuikaGame
 
   @override
   void render(Canvas canvas) {
-    // Draw fruit emoji only for next fruit display
-    if (game.nextFruitQueue.isEmpty) return;
-    
-    final nextFruit = game.nextFruitQueue.first;
-    final radius = nextFruit.radius * 15;
-    
-    // Emoji only
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: nextFruit.emoji,
-        style: TextStyle(
-          fontSize: radius * 1.5,
-          fontFamily: 'Noto Color Emoji',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(-50 - textPainter.width / 2, 60 - textPainter.height / 2),
-    );
+    // Hidden per user request: Removing 'NEXT' fruit preview
+    return;
   }
   
   @override

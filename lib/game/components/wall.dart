@@ -23,14 +23,6 @@ class Wall extends BodyComponent {
 
   @override
   void render(Canvas canvas) {
-    // We are in world coordinates.
-    // Let's draw a nice thick line for the wall.
-    final paint = Paint()
-      ..color = const Color(0xFFffffff).withOpacity(0.5)
-      ..strokeWidth = 0.2 // in meters
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-      
-    canvas.drawLine(start.toOffset(), end.toOffset(), paint);
+    // Hidden per user request: Removing container border
   }
 }

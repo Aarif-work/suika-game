@@ -23,8 +23,8 @@ class Fruit extends BodyComponent with ContactCallbacks {
     final shape = CircleShape()..radius = type.radius;
     final fixtureDef = FixtureDef(
       shape,
-      restitution: 0.2, // Bounciness
-      friction: 0.4,
+      restitution: 0.3, // Slightly more bounce
+      friction: 0.15,  // Less friction to make them slippery
       density: 1.0,
     );
 
@@ -32,6 +32,7 @@ class Fruit extends BodyComponent with ContactCallbacks {
       position: initialPosition,
       type: BodyType.dynamic,
       userData: this,
+      angle: (DateTime.now().millisecondsSinceEpoch % 360) * (3.14159 / 180), // Random starting angle
     );
 
     return world.createBody(bodyDef)..createFixture(fixtureDef);

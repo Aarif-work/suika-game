@@ -4,10 +4,12 @@ import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'dart:math';
 import 'components/wall.dart';
 import 'components/fruit.dart';
 import 'components/merge_effect.dart';
 import 'components/spawner.dart';
+import 'components/deadline.dart';
 import 'components/next_fruit_display.dart';
 import 'components/score_display.dart';
 import 'constants.dart';
@@ -33,8 +35,22 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     _canDrop = false;
     final position = _pointerPosition.clone();
     
+    // Add tiny random jitter to prevent perfect "skyscraper" stacking
+    final randomJitter = (Random().nextDouble() - 0.5) * 0.04; // +/- 0.02 meters
+    position.x += randomJitter;
+    
     // Create physical fruit directly
-    world.add(Fruit(_currentFruitType!, position));
+    final fruit = Fruit(_currentFruitType!, position);
+    world.add(fruit);
+    
+    // Apply a tiny random nudge/impulse after a frame to ensure it's not perfectly static
+    Future.microtask(() {
+      if (fruit.body.isActive) {
+        final nudge = Vector2((Random().nextDouble() - 0.5) * 0.1, 0);
+        fruit.body.applyLinearImpulse(nudge);
+      }
+    });
+
     _currentFruitType = null;
 
     // Delay before next spawn
@@ -96,8 +112,10 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     
     for (final child in world.children) {
       if (child is Fruit) {
-        // If fruit is above the deadline line and alive for > 2s
-        if (child.timeAlive > 2.0 && child.body.position.y < deadlineY) {
+        // Game over if fruit stays above deadline for more than 1.5s
+        // We use the top part of the fruit for detection
+        final fruitTopY = child.body.position.y - child.type.radius;
+        if (child.timeAlive > 1.5 && fruitTopY < deadlineY) {
            _gameOver();
            return;
         }
@@ -158,6 +176,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     _spawnNextFruit();
     
     world.add(Spawner());
+    world.add(Deadline());
     
     // HUD is handled by EnhancedHUD widget overlay in GameScreen
     // camera.viewport.add(NextFruitDisplay());
@@ -217,8 +236,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   }
   
   FruitType _generateRandomFruit() {
-    final nextIndex = (DateTime.now().millisecondsSinceEpoch % 4);
-    return FruitType.values[nextIndex];
+    return FruitType.values[Random().nextInt(4)];
   }
 
   @override
@@ -234,62 +252,6 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
 
 
   
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    
-    // Draw deadline line (game over line) - very visible at top
-    const deadlineY = 0.8;
-    
-    // Red danger line
-    final linePaint = Paint()
-      ..color = const Color(0xFFff0000)
-      ..strokeWidth = 0.1
-      ..style = PaintingStyle.stroke;
-    
-    canvas.drawLine(
-      const Offset(0, deadlineY),
-      Offset(worldWidth, deadlineY),
-      linePaint,
-    );
-    
-    // Yellow warning stripes above the line
-    final stripePaint = Paint()
-      ..color = const Color(0xFFffff00).withOpacity(0.7)
-      ..strokeWidth = 0.06;
-    
-    const stripeWidth = 0.3;
-    const stripeSpace = 0.3;
-    double startX = 0.0;
-    
-    while (startX < worldWidth) {
-      canvas.drawLine(
-        Offset(startX, deadlineY - 0.08),
-        Offset((startX + stripeWidth).clamp(0, worldWidth), deadlineY - 0.08),
-        stripePaint,
-      );
-      startX += stripeWidth + stripeSpace;
-    }
-    
-    // Draw "DANGER" label
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: 'DANGER ZONE',
-        style: TextStyle(
-          fontSize: 0.15,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFff0000),
-          letterSpacing: 0.02,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset((worldWidth - textPainter.width) / 2, deadlineY - 0.35),
-    );
-  }
 
   void _processMerges() {
     final processed = <Fruit>{};
@@ -334,6 +296,6 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     }
     _merges.clear();
   }
-
+ 
 
 }
