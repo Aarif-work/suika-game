@@ -15,8 +15,22 @@ import 'components/score_display.dart';
 import 'constants.dart';
 
 class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
+  final GameMode _gameMode;
+  final GameTheme _gameTheme;
 
+  GameMode get gameMode => _gameMode;
+  GameTheme get gameTheme => _gameTheme;
+  
+  SuikaGame({
+    GameMode? gameMode,
+    GameTheme? gameTheme,
+  }) : _gameMode = gameMode ?? GameMode.classic,
+       _gameTheme = gameTheme ?? GameTheme.fruit,
+       super(gravity: Vector2(0, 20));
 
+  double? _remainingTime;
+  double? get remainingTime => _remainingTime;
+  double get ppm => camera.viewfinder.zoom;
 
   @override
   void onPanStart(DragStartInfo info) {
@@ -45,7 +59,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     
     // Apply a tiny random nudge/impulse after a frame to ensure it's not perfectly static
     Future.microtask(() {
-      if (fruit.body.isActive) {
+      if (fruit.isMounted && fruit.body.isActive) {
         final nudge = Vector2((Random().nextDouble() - 0.5) * 0.1, 0);
         fruit.body.applyLinearImpulse(nudge);
       }
@@ -60,18 +74,17 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   }
 
   void _updatePointerPosition(Vector2 widgetPosition) {
-    double x = widgetPosition.x / _scale;
+    // Standardized camera-based coordinate conversion
+    final worldPosition = camera.globalToLocal(widgetPosition);
+    double x = worldPosition.x;
+    
+    // Clamp to world boundaries with a small safety margin
     x = x.clamp(0.2, worldWidth - 0.2);
     _pointerPosition = Vector2(x, 1.0);
   }
 
   // Queue for processing merges to avoid physics locking issues
   final List<({Fruit a, Fruit b})> _merges = [];
-
-  SuikaGame()
-      : super(
-          gravity: Vector2(0, 20),
-        );
 
   @override
   Color backgroundColor() => Colors.transparent;
@@ -98,6 +111,15 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   void update(double dt) {
     if (_isGameOver) return;
     super.update(dt);
+
+    if (_remainingTime != null) {
+      _remainingTime = _remainingTime! - dt;
+      if (_remainingTime! <= 0) {
+        _remainingTime = 0;
+        _gameOver();
+      }
+    }
+
     _processMerges();
     _checkGameOver();
   }
@@ -153,14 +175,13 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     _score = 0;
     _isGameOver = false;
     _canDrop = true;
+    _merges.clear();
+    _remainingTime = gameMode.durationSeconds?.toDouble();
     _spawnNextFruit();
     
     overlays.remove('GameOver');
     resumeEngine();
   }
-
-  // ... merge logic ...
-
 
   // World dimensions in meters - responsive to screen
   static const double worldWidth = 5.0;
@@ -172,6 +193,10 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   Future<void> onLoad() async {
     await super.onLoad();
     
+    if (gameMode.durationSeconds != null) {
+      _remainingTime = gameMode.durationSeconds!.toDouble();
+    }
+    
     // Initial fruit
     _spawnNextFruit();
     
@@ -179,8 +204,6 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     world.add(Deadline());
     
     // HUD is handled by EnhancedHUD widget overlay in GameScreen
-    // camera.viewport.add(NextFruitDisplay());
-    // camera.viewport.add(ScoreDisplay());
 
     // Setup Walls using world dimensions
     // Floor
@@ -190,8 +213,6 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     // Right Wall
     await world.add(Wall(Vector2(worldWidth, 0), Vector2(worldWidth, worldHeight)));
 
-    // Camera setup will be handled in onGameResize initially called by engine? 
-    // Or we force it here partially.
     // Pre-load audio
     try {
       await FlameAudio.audioCache.loadAll([
@@ -241,17 +262,11 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
 
   @override
   void onMouseMove(PointerHoverInfo info) {
-    final screenPosition = info.eventPosition.widget;
-    
-    double x = screenPosition.x / _scale;
-    
+    final worldPosition = camera.globalToLocal(info.eventPosition.widget);
+    double x = worldPosition.x;
     x = x.clamp(0.2, worldWidth - 0.2);
-    
     _pointerPosition = Vector2(x, 1.0);
   }
-
-
-  
 
   void _processMerges() {
     final processed = <Fruit>{};
@@ -296,6 +311,4 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     }
     _merges.clear();
   }
- 
-
 }

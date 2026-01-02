@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import '../game/constants.dart';
 import 'game_screen.dart';
 import 'settings_screen.dart';
 import 'leaderboard_screen.dart';
-import 'app_theme.dart';
 
-class MainMenu extends StatelessWidget {
+class MainMenu extends StatefulWidget {
   const MainMenu({Key? key}) : super(key: key);
+
+  @override
+  State<MainMenu> createState() => _MainMenuState();
+}
+
+class _MainMenuState extends State<MainMenu> {
+  GameTheme _selectedTheme = GameTheme.fruit;
 
   @override
   Widget build(BuildContext context) {
@@ -28,44 +35,82 @@ class MainMenu extends StatelessWidget {
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  // Game Title
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Text(
-                          '🍒',
-                          style: TextStyle(fontSize: 80),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'SUIKA GAME',
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFe76f51),
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black26,
-                                offset: Offset(2, 2),
+                  const SizedBox(height: 60),
+                  // Theme Selection (Replacing the Logo)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: GameTheme.values.map((theme) {
+                      final isSelected = _selectedTheme == theme;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedTheme = theme),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: EdgeInsets.all(isSelected ? 16 : 12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFFe76f51) : Colors.transparent,
+                              width: 3,
+                            ),
+                            boxShadow: isSelected ? [
+                              BoxShadow(
+                                color: const Color(0xFFe76f51).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              )
+                            ] : [],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                theme.emoji,
+                                style: TextStyle(
+                                  fontSize: isSelected ? 48 : 36,
+                                ),
                               ),
+                              if (isSelected) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  theme.name,
+                                  style: const TextStyle(
+                                    color: Color(0xFFe76f51),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Drop & Merge Fruits',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color(0xFF6d6875),
-                            fontWeight: FontWeight.w500,
-                          ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 20),
+                  
+                  // Game Title
+                  const Text(
+                    'SUIKA GAME',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFe76f51),
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 4,
+                          color: Colors.black26,
+                          offset: Offset(2, 2),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  
+                  const SizedBox(height: 60),
+
                   // Menu Buttons
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -73,26 +118,31 @@ class MainMenu extends StatelessWidget {
                       children: [
                         _MenuButton(
                           text: 'PLAY',
-                          icon: Icons.play_arrow,
+                          emoji: '▶️',
                           color: const Color(0xFFe76f51),
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => const GameScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => GameScreen(
+                                  mode: GameMode.classic,
+                                  theme: _selectedTheme,
+                                ),
+                              ),
                             );
                           },
                         ),
                         const SizedBox(height: 15),
                         _MenuButton(
                           text: 'HOW TO PLAY',
-                          icon: Icons.help_outline,
+                          emoji: '❓',
                           color: const Color(0xFF2a9d8f),
                           onPressed: () => _showHowToPlay(context),
                         ),
                         const SizedBox(height: 15),
                         _MenuButton(
                           text: 'LEADERBOARD',
-                          icon: Icons.leaderboard,
+                          emoji: '🏆',
                           color: const Color(0xFF9c88ff),
                           onPressed: () {
                             Navigator.push(
@@ -104,7 +154,7 @@ class MainMenu extends StatelessWidget {
                         const SizedBox(height: 15),
                         _MenuButton(
                           text: 'SETTINGS',
-                          icon: Icons.settings,
+                          emoji: '⚙️',
                           color: const Color(0xFFf4a261),
                           onPressed: () {
                             Navigator.push(
@@ -137,6 +187,7 @@ class MainMenu extends StatelessWidget {
     );
   }
 
+
   void _showHowToPlay(BuildContext context) {
     showDialog(
       context: context,
@@ -156,49 +207,17 @@ class MainMenu extends StatelessWidget {
       ),
     );
   }
-
-  void _showSettings(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => _InfoDialog(
-        title: 'Settings',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.volume_up, color: Color(0xFF2a9d8f)),
-              title: const Text('Sound Effects'),
-              trailing: Switch(
-                value: true,
-                onChanged: (value) {},
-                activeColor: const Color(0xFF2a9d8f),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.music_note, color: Color(0xFF2a9d8f)),
-              title: const Text('Background Music'),
-              trailing: Switch(
-                value: true,
-                onChanged: (value) {},
-                activeColor: const Color(0xFF2a9d8f),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _MenuButton extends StatelessWidget {
   final String text;
-  final IconData icon;
+  final String emoji;
   final Color color;
   final VoidCallback onPressed;
 
   const _MenuButton({
     required this.text,
-    required this.icon,
+    required this.emoji,
     required this.color,
     required this.onPressed,
   });
@@ -222,7 +241,7 @@ class _MenuButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 24),
+            Text(emoji, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: 12),
             Text(
               text,
@@ -268,7 +287,7 @@ class _InfoDialog extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFe76f51),
+                    color: const Color(0xFFe76f51),
                   ),
                 ),
                 const SizedBox(height: 20),

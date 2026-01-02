@@ -5,8 +5,17 @@ import '../game/components/game_over_overlay.dart';
 import 'pause_overlay.dart';
 import 'enhanced_hud.dart';
 
+import '../game/constants.dart';
+
 class GameScreen extends StatefulWidget {
-  const GameScreen({Key? key}) : super(key: key);
+  final GameMode mode;
+  final GameTheme theme;
+
+  const GameScreen({
+    Key? key,
+    this.mode = GameMode.classic,
+    this.theme = GameTheme.fruit,
+  }) : super(key: key);
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -18,7 +27,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    game = SuikaGame();
+    game = SuikaGame(gameMode: widget.mode, gameTheme: widget.theme);
   }
 
   @override

@@ -81,6 +81,41 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
                   ),
                 ),
                 const Spacer(),
+                // Timer Card (only if timed mode)
+                if (widget.game.gameMode.durationSeconds != null)
+                  _HUDCard(
+                    child: StreamBuilder<double?>(
+                      stream: _timerStream(),
+                      builder: (context, snapshot) {
+                        final time = snapshot.data ?? widget.game.remainingTime ?? 0.0;
+                        final minutes = (time / 60).floor();
+                        final seconds = (time % 60).floor();
+                        final timeStr = '$minutes:${seconds.toString().padLeft(2, '0')}';
+                        
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.timer,
+                              color: time < 10 ? Colors.red : const Color(0xFF2a9d8f),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              timeStr,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: time < 10 ? Colors.red : const Color(0xFF2a9d8f),
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                if (widget.game.gameMode.durationSeconds != null) const Spacer(),
                 // Pause Button
                 _HUDButton(
                   icon: Icons.pause,
@@ -93,68 +128,6 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
               ],
             ),
             const Spacer(),
-            // Bottom HUD removed per user request
-            /*
-            if (widget.game.currentFruitType != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.game.currentFruitType!.color.withOpacity(0.3),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: widget.game.currentFruitType!.color,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.game.currentFruitType!.emoji,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'TAP TO DROP',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2a9d8f),
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        Text(
-                          widget.game.currentFruitType!.name.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFe76f51),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            */
           ],
         ),
       ),
@@ -165,6 +138,13 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
     while (mounted) {
       await Future.delayed(const Duration(milliseconds: 100));
       if (mounted) yield widget.game.score;
+    }
+  }
+
+  Stream<double?> _timerStream() async* {
+    while (mounted) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (mounted) yield widget.game.remainingTime;
     }
   }
 }

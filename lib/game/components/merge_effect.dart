@@ -3,7 +3,9 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../constants.dart';
 
-class MergeEffect extends PositionComponent {
+import '../suika_game.dart';
+
+class MergeEffect extends PositionComponent with HasGameReference<SuikaGame> {
   final FruitType fromType;
   final FruitType toType;
   final Vector2 mergePosition;
@@ -43,7 +45,7 @@ class MergeEffect extends PositionComponent {
       final expandOpacity = (1.0 - circleProgress).clamp(0.0, 1.0);
       
       final expandPaint = Paint()
-        ..color = toType.color.withOpacity(expandOpacity * 0.5)
+        ..color = toType.getColor(game.gameTheme).withOpacity(expandOpacity * 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.05;
       canvas.drawCircle(Offset.zero, expandRadius, expandPaint);
@@ -59,7 +61,7 @@ class MergeEffect extends PositionComponent {
         final particleY = particleDistance * dart_math.sin(angle);
         
         final particlePaint = Paint()
-          ..color = fromType.color.withOpacity((1.0 - particleProgressRaw) * 0.8);
+          ..color = fromType.getColor(game.gameTheme).withOpacity((1.0 - particleProgressRaw) * 0.8);
         canvas.drawCircle(
           Offset(particleX, particleY),
           0.05 * (1.0 - particleProgressRaw),

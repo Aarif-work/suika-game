@@ -3,6 +3,38 @@ import 'package:flutter/material.dart';
 class Constants {
   static const double gameWidth = 600;
   static const double gameHeight = 900;
+  static const double visualMargin = 1.05; // Assets rendered at 105% to ensure visual contact (compensating for sprite padding)
+}
+
+enum GameMode {
+  classic('Classic', 'Unlimited time to reach the highest score.'),
+  oneMinute('1 Minute', 'Score as much as possible in 60 seconds.', durationSeconds: 60),
+  twoMinutes('2 Minutes', 'Score as much as possible in 120 seconds.', durationSeconds: 120);
+
+  final String name;
+  final String description;
+  final int? durationSeconds;
+
+  const GameMode(this.name, this.description, {this.durationSeconds});
+}
+
+enum GameTheme {
+  fruit(
+    name: 'Fruit',
+    emoji: '🍒',
+  ),
+  space(
+    name: 'Space', 
+    emoji: '🪐',
+  );
+
+  final String name;
+  final String emoji;
+
+  const GameTheme({
+    required this.name,
+    required this.emoji,
+  });
 }
 
 enum FruitType {
@@ -25,4 +57,55 @@ enum FruitType {
   final String emoji;
   final String spriteFile;
   final String audioFile;
+
+  String getSpriteFile(GameTheme? theme) {
+    if (theme == GameTheme.space) {
+      if (index == 0) return 'planet.png'; // New first planet
+      if (index == 1) return 'planet0.png'; // Was Mercury
+      if (index == 2) return 'planet1.png'; // Was Venus
+      if (index == 3) return 'planet2.png'; // Was Earth
+      if (index == 4) return 'planet3.png'; // Was Mars
+      if (index == 5) return 'planet4.png'; // Was Jupiter
+      if (index == 6) return 'planet5.png'; // Was Saturn
+      
+      // Reuse bases for higher tiers with tints
+      if (index == 7) return 'planet2.png'; // Neptune base (reused)
+      if (index == 8) return 'planet4.png'; // Sun base (reused)
+      if (index == 9) return 'planet5.png'; // Black Hole base (reused)
+    }
+    return spriteFile;
+  }
+
+  Color? getSpriteTint(GameTheme? theme) {
+    if (theme == GameTheme.space) {
+      if (index == 7) return const Color(0xFF0D47A1).withOpacity(0.6); // Neptune Deep Blue tint
+      if (index == 8) return const Color(0xFFFFEB3B).withOpacity(0.5); // Sun Yellow tint
+      if (index == 9) return const Color(0xFF673AB7).withOpacity(0.7); // Black Hole Purple tint
+    }
+    return null;
+  }
+
+  String getEmoji(GameTheme? theme) {
+    if (theme == null || theme == GameTheme.fruit) return emoji;
+    
+    const themeEmojis = {
+      GameTheme.space: ['☄️', '🛰️', '🔭', '🌑', '🌙', '🌕', '🪐', '🌞', '🌌', '🛸'],
+    };
+
+    return themeEmojis[theme]?[index] ?? emoji;
+  }
+
+  Color getColor(GameTheme? theme) {
+    if (theme == null || theme == GameTheme.fruit) return color;
+
+    const themeColors = {
+      GameTheme.space: [
+        Color(0xFFB0BEC5), Color(0xFF90A4AE), Color(0xFF78909C), Color(0xFF607D8B),
+        Color(0xFF546E7A), Color(0xFF455A64), Color(0xFF37474F), Color(0xFF263238),
+        Color(0xFF212121), Color(0xFF000000)
+      ],
+    };
+
+    return themeColors[theme]?[index] ?? color;
+  }
 }

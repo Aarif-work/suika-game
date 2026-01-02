@@ -29,12 +29,15 @@ class Spawner extends PositionComponent with HasGameReference<SuikaGame> {
   }
 
   Future<void> _loadSprite() async {
-    if (_lastFruitType != null) {
+    if (_lastFruitType != null && (game.gameTheme == GameTheme.fruit || game.gameTheme == GameTheme.space)) {
       try {
-        _currentSprite = await game.loadSprite(_lastFruitType!.spriteFile);
+        _currentSprite = await game.loadSprite(_lastFruitType!.getSpriteFile(game.gameTheme));
       } catch (e) {
         // Sprite loading failed
+        _currentSprite = null;
       }
+    } else {
+      _currentSprite = null;
     }
   }
 
@@ -42,29 +45,51 @@ class Spawner extends PositionComponent with HasGameReference<SuikaGame> {
   void render(Canvas canvas) {
     super.render(canvas);
     
-    if (game.currentFruitType != null && _currentSprite != null) {
-      final radius = game.currentFruitType!.radius;
-      final size = radius * 1.9; // Match fruit rendering size
+    if (game.currentFruitType != null) {
+      final type = game.currentFruitType!;
+      final visualDiameter = type.radius * 2 * Constants.visualMargin;
       
-      // Draw semi-transparent preview sprite
-      canvas.save();
-      
-      final paint = Paint()..color = Colors.white.withOpacity(0.8);
-      _currentSprite!.render(
-        canvas,
-        position: Vector2(-size / 2, -size / 2),
-        size: Vector2.all(size),
-        overridePaint: paint,
-      );
-      
-      canvas.restore();
+      if (_currentSprite != null) {
+        final tint = type.getSpriteTint(game.gameTheme);
+        canvas.save();
+        final paint = Paint()..color = Colors.white.withOpacity(0.8);
+        if (tint != null) {
+          paint.colorFilter = ColorFilter.mode(tint, BlendMode.srcATop);
+        }
+        _currentSprite!.render(
+          canvas,
+          position: Vector2(-visualDiameter / 2, -visualDiameter / 2),
+          size: Vector2.all(visualDiameter),
+          overridePaint: paint,
+        );
+        canvas.restore();
+      } else {
+        // Render thematic emoji
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: type.getEmoji(game.gameTheme),
+            style: TextStyle(
+              fontSize: visualDiameter * 0.9,
+              fontFamily: 'Noto Color Emoji',
+              height: 1.0, 
+              color: type.getColor(game.gameTheme).withOpacity(0.6),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(-textPainter.width / 2, -textPainter.height / 2),
+        );
+      }
       
       // Draw vertical guide line
       final linePaint = Paint()
         ..color = Colors.white.withOpacity(0.3)
         ..strokeWidth = 0.03;
       canvas.drawLine(
-        Offset(0, radius),
+        Offset(0, type.radius),
         Offset(0, 8.0), // Line down to bottom
         linePaint,
       );

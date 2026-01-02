@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../suika_game.dart';
 
-class Fruit extends BodyComponent with ContactCallbacks {
+class Fruit extends BodyComponent<SuikaGame> with ContactCallbacks {
   final FruitType type;
   final Vector2 initialPosition;
 
@@ -43,34 +43,52 @@ class Fruit extends BodyComponent with ContactCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    try {
-      _sprite = await game.loadSprite(type.spriteFile);
-    } catch (e) {
-      // Sprite loading failed - will use fallback emoji
+    
+    // Load sprites if theme-specific assets exist
+    if (game.gameTheme == GameTheme.fruit || game.gameTheme == GameTheme.space) {
+      try {
+        _sprite = await game.loadSprite(type.getSpriteFile(game.gameTheme));
+      } catch (e) {
+        // Sprite loading failed - will use fallback emoji
+      }
     }
   }
 
   @override
   void render(Canvas canvas) {
+    // Standardized visual diameter in meters
+    final visualDiameter = type.radius * 2 * Constants.visualMargin;
+    
     if (_sprite != null) {
-      final radius = type.radius;
-      // Sprite size = 1.9x radius (fits within 2.0x diameter physics body)
-      final size = radius * 1.9;
-      _sprite!.render(
-        canvas,
-        position: Vector2(-size / 2, -size / 2),
-        size: Vector2.all(size),
-      );
+      final tint = type.getSpriteTint(game.gameTheme);
+      if (tint != null) {
+        canvas.save();
+        final paint = Paint()
+          ..colorFilter = ColorFilter.mode(tint, BlendMode.srcATop);
+        _sprite!.render(
+          canvas,
+          position: Vector2(-visualDiameter / 2, -visualDiameter / 2),
+          size: Vector2.all(visualDiameter),
+          overridePaint: paint,
+        );
+        canvas.restore();
+      } else {
+        _sprite!.render(
+          canvas,
+          position: Vector2(-visualDiameter / 2, -visualDiameter / 2),
+          size: Vector2.all(visualDiameter),
+        );
+      }
     } else {
-      // Fallback to emoji if sprite fails
-      final radius = type.radius;
+      // Use thematic emoji
       final textPainter = TextPainter(
         text: TextSpan(
-          text: type.emoji,
+          text: type.getEmoji(game.gameTheme),
           style: TextStyle(
-            fontSize: radius * 1.75,
+            fontSize: visualDiameter * 0.9, // Adjust so emoji fits nicely in the center
             fontFamily: 'Noto Color Emoji',
             height: 1.0, 
+            color: type.getColor(game.gameTheme),
           ),
         ),
         textDirection: TextDirection.ltr,
