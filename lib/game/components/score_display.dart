@@ -1,53 +1,86 @@
 import 'package:flame/components.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import '../suika_game.dart';
 
 class ScoreDisplay extends PositionComponent with HasGameReference<SuikaGame> {
   ScoreDisplay() : super(position: Vector2(20, 50), anchor: Anchor.topLeft);
 
-  @override
-  Future<void> onLoad() async {
-    // positionType = PositionType.viewport; // Not needed if added to viewport
-  }
+  final _textPainter = TextPainter(textDirection: TextDirection.ltr);
 
   @override
   void render(Canvas canvas) {
-    // Draw Card Background
-    final bgRect = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(0, 0, 160, 50),
-      const Radius.circular(15),
+    // 1. Draw "Glass" Background
+    final rrect = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(0, 0, 180, 60), // Slightly larger for icon
+      const Radius.circular(16),
     );
-    
-    final bgPaint = Paint()..color = const Color(0xFFffffff).withOpacity(0.9);
+
+    // Gradient Shader for Glass effect
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0x99FFFFFF), // White with 0.6 opacity
+          Color(0x4DFFFFFF), // White with 0.3 opacity
+        ],
+      ).createShader(rrect.outerRect)
+      ..style = PaintingStyle.fill;
+
+    // Border Paint
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    // Shadow Paint
     final shadowPaint = Paint()
-      ..color = const Color(0xFF000000).withOpacity(0.2)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      ..color = Colors.black.withOpacity(0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
-    canvas.drawRRect(bgRect.shift(const Offset(2, 2)), shadowPaint);
-    canvas.drawRRect(bgRect, bgPaint);
+    // Draw Shadow first
+    canvas.drawRRect(rrect.shift(const Offset(4, 4)), shadowPaint);
+    // Draw Glass Fill
+    canvas.drawRRect(rrect, paint);
+    // Draw Border
+    canvas.drawRRect(rrect, borderPaint);
 
-    // Render Text
-    final textSpan = TextSpan(
-      text: 'Score: ${game.score}',
-      style: const TextStyle(
-        color: Color(0xFFe76f51), // Burnt Sienna
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+    // 2. Render Text with Trophy Icon
+    _textPainter.text = TextSpan(
+      children: [
+        const TextSpan(
+          text: '🏆 ',
+          style: TextStyle(
+            fontSize: 24,
+          ),
+        ),
+        TextSpan(
+          text: '${game.score}',
+          style: const TextStyle(
+            color: Color(0xFFe76f51),
+            fontSize: 28,
+            fontWeight: FontWeight.w900, // Extra bold
+            shadows: [
+              Shadow(
+                color: Colors.black12,
+                offset: Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
+
+    _textPainter.layout();
     
-    final textPainter = TextPainter(
-      text: textSpan,
-      textDirection: TextDirection.ltr,
-    );
-    
-    textPainter.layout();
-    textPainter.paint(
-      canvas, 
+    // Center text in the card
+    _textPainter.paint(
+      canvas,
       Offset(
-        (160 - textPainter.width) / 2, 
-        (50 - textPainter.height) / 2
-      )
+        (180 - _textPainter.width) / 2,
+        (60 - _textPainter.height) / 2,
+      ),
     );
   }
 }

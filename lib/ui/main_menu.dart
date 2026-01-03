@@ -46,7 +46,7 @@ class _MainMenuState extends State<MainMenu> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.symmetric(horizontal: 12),
-                          padding: EdgeInsets.all(isSelected ? 16 : 12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(24),

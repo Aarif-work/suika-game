@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'ui/main_menu.dart';
+import 'ui/splash_screen.dart';
 
 void main() {
   // Ensure Flutter bindings are initialized
@@ -30,7 +30,7 @@ void main() {
         scaffoldBackgroundColor: const Color(0xFF0d0d0d),
         fontFamily: 'Roboto',
       ),
-      home: const MainMenu(),
+      home: const SplashScreen(),
     ),
   );
 }

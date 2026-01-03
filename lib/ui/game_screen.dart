@@ -88,7 +88,9 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 // Enhanced HUD overlay
-                EnhancedHUD(game: game),
+                Positioned.fill(
+                  child: EnhancedHUD(game: game),
+                ),
               ],
             );
           }
