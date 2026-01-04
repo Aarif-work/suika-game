@@ -4,6 +4,7 @@ import '../game/suika_game.dart';
 import '../game/components/game_over_overlay.dart';
 import 'pause_overlay.dart';
 import 'enhanced_hud.dart';
+import 'widgets/atmosphere_background.dart';
 
 import '../game/constants.dart';
 
@@ -40,16 +41,13 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF667eea), // Purple
-              Color(0xFF764ba2), // Deep purple
-              Color(0xFFf093fb), // Pink
-              Color(0xFF4facfe), // Blue
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: widget.theme == GameTheme.space
+              ? [const Color(0xFF0f0c29), const Color(0xFF302b63), const Color(0xFF24243e)]
+              : [const Color(0xFFfff1eb), const Color(0xFFace0f9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: LayoutBuilder(
@@ -63,6 +61,7 @@ class _GameScreenState extends State<GameScreen> {
             
             return Stack(
               children: [
+                AtmosphereBackground(theme: widget.theme),
                 // Game area with responsive padding
                 Padding(
                   padding: EdgeInsets.symmetric(

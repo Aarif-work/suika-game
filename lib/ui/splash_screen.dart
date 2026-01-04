@@ -145,20 +145,6 @@ class _SplashScreenState extends State<SplashScreen>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Stage 1: Big Logo
-                  Opacity(
-                    opacity: _bigLogoFadeInAnimation.value * _bigLogoFadeOutAnimation.value,
-                    child: Transform.scale(
-                      scale: _bigLogoScaleAnimation.value,
-                      child: Image.asset(
-                        'assets/logo.png',
-                        width: 300,
-                        height: 300,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  
                   // Stage 2: Full Logo
                   Opacity(
                     opacity: _fullLogoFadeInAnimation.value,

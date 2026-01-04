@@ -58,9 +58,6 @@ class Fruit extends BodyComponent<SuikaGame> with ContactCallbacks {
   void render(Canvas canvas) {
     // Standardized visual diameter in meters
     double margin = Constants.visualMargin;
-    if (game.gameTheme == GameTheme.space) {
-      margin = 1.2; // Reduce slightly to avoid overlap, but keep them touching
-    }
     final visualDiameter = type.radius * 2 * margin;
     
     if (_sprite != null) {

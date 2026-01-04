@@ -21,11 +21,11 @@ enum GameMode {
 enum GameTheme {
   fruit(
     name: 'Fruit',
-    emoji: '🍒',
+    emoji: '🍒\uFE0F',
   ),
   space(
     name: 'Space', 
-    emoji: '🪐',
+    emoji: '🚀\uFE0F',
   );
 
   final String name;
