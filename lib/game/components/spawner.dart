@@ -88,11 +88,20 @@ class Spawner extends PositionComponent with HasGameReference<SuikaGame> {
       final linePaint = Paint()
         ..color = Colors.white.withOpacity(0.3)
         ..strokeWidth = 0.03;
-      canvas.drawLine(
-        Offset(0, type.radius),
-        Offset(0, 8.0), // Line down to bottom
-        linePaint,
-      );
+      
+      if (game.isInverted) {
+        canvas.drawLine(
+          Offset(0, -type.radius),
+          Offset(0, -8.0), // Line up to top
+          linePaint,
+        );
+      } else {
+        canvas.drawLine(
+          Offset(0, type.radius),
+          Offset(0, 8.0), // Line down to bottom
+          linePaint,
+        );
+      }
     }
   }
 }

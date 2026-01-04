@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../suika_game.dart';
 
 class Deadline extends PositionComponent with HasGameReference<SuikaGame> {
-  static const double deadlineY = 0.8;
+  double get _deadlineY => game.isInverted ? SuikaGame.worldHeight - 0.8 : 0.8;
 
   @override
   void render(Canvas canvas) {
@@ -16,8 +16,8 @@ class Deadline extends PositionComponent with HasGameReference<SuikaGame> {
 
     // Draw horizontal line across the world width
     canvas.drawLine(
-      const Offset(0, deadlineY),
-      Offset(SuikaGame.worldWidth, deadlineY),
+      Offset(0, _deadlineY),
+      Offset(SuikaGame.worldWidth, _deadlineY),
       linePaint,
     );
 
@@ -35,9 +35,11 @@ class Deadline extends PositionComponent with HasGameReference<SuikaGame> {
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
+    
+    final labelY = game.isInverted ? _deadlineY + 0.1 : _deadlineY - 0.3;
     textPainter.paint(
       canvas,
-      Offset((SuikaGame.worldWidth - textPainter.width) / 2, deadlineY - 0.3),
+      Offset((SuikaGame.worldWidth - textPainter.width) / 2, labelY),
     );
   }
 }

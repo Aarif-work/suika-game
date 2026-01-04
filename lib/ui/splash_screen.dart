@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'main_menu.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,86 +12,93 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   
-  late Animation<double> _logoFadeAnimation;
-  late Animation<double> _logoScaleAnimation;
-  late Animation<double> _brandFadeAnimation;
-  late Animation<double> _brandSlideAnimation;
-  late Animation<double> _shimmerAnimation;
+  // First stage - Big logo
+  late Animation<double> _bigLogoFadeInAnimation;
+  late Animation<double> _bigLogoScaleAnimation;
+  late Animation<double> _bigLogoFadeOutAnimation;
+  
+  // Second stage - Full logo
+  late Animation<double> _fullLogoFadeInAnimation;
+  late Animation<double> _fullLogoScaleAnimation;
+  
+  // Final fade out
   late Animation<double> _fadeOutAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Main animation controller (4.5 seconds total)
+    // Main animation controller (5.5 seconds total)
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 4500),
+      duration: const Duration(milliseconds: 5500),
       vsync: this,
     );
 
-    // Logo fade-in animation (0.2 - 1.6s)
-    _logoFadeAnimation = Tween<double>(
+    // STAGE 1: Big Logo (0.0 - 2.5s)
+    // Big logo fade in (0.0 - 0.8s)
+    _bigLogoFadeInAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.04, 0.36, curve: Curves.easeInOut),
+        curve: const Interval(0.0, 0.15, curve: Curves.easeInOut),
       ),
     );
 
-    // Logo scale animation with elastic effect (0.2 - 1.6s)
-    _logoScaleAnimation = Tween<double>(
+    // Big logo scale (0.0 - 0.8s)
+    _bigLogoScaleAnimation = Tween<double>(
       begin: 0.5,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.04, 0.36, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.15, curve: Curves.easeOutCubic),
       ),
     );
 
-    // Brand text fade-in (1.4 - 2.4s)
-    _brandFadeAnimation = Tween<double>(
+    // Big logo fade out (1.8 - 2.5s)
+    _bigLogoFadeOutAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.33, 0.45, curve: Curves.easeInOut),
+      ),
+    );
+
+    // STAGE 2: Full Logo (2.3 - 5.0s)
+    // Full logo fade in (2.3 - 3.0s)
+    _fullLogoFadeInAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.31, 0.53, curve: Curves.easeInOut),
+        curve: const Interval(0.42, 0.55, curve: Curves.easeInOut),
       ),
     );
 
-    // Brand text slide up animation (1.4 - 2.4s)
-    _brandSlideAnimation = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
+    // Full logo scale (2.3 - 3.0s)
+    _fullLogoScaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.31, 0.53, curve: Curves.easeOutCubic),
+        curve: const Interval(0.42, 0.55, curve: Curves.easeOutCubic),
       ),
     );
 
-    // Shimmer effect for brand (1.8 - 3.0s)
-    _shimmerAnimation = Tween<double>(
-      begin: -2.0,
-      end: 2.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.4, 0.67, curve: Curves.easeInOut),
-      ),
-    );
-
-    // Fade-out animation (3.0 - 4.5s)
+    // Final fade out (4.5 - 5.5s)
     _fadeOutAnimation = Tween<double>(
       begin: 1.0,
       end: 0.0,
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.67, 1.0, curve: Curves.easeInOut),
+        curve: const Interval(0.82, 1.0, curve: Curves.easeInOut),
       ),
     );
 
@@ -136,14 +142,28 @@ class _SplashScreenState extends State<SplashScreen>
           return Opacity(
             opacity: _fadeOutAnimation.value,
             child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  // Full logo with fade and scale animation
+                  // Stage 1: Big Logo
                   Opacity(
-                    opacity: _logoFadeAnimation.value,
+                    opacity: _bigLogoFadeInAnimation.value * _bigLogoFadeOutAnimation.value,
                     child: Transform.scale(
-                      scale: _logoScaleAnimation.value,
+                      scale: _bigLogoScaleAnimation.value,
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: 300,
+                        height: 300,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  
+                  // Stage 2: Full Logo
+                  Opacity(
+                    opacity: _fullLogoFadeInAnimation.value,
+                    child: Transform.scale(
+                      scale: _fullLogoScaleAnimation.value,
                       child: Image.asset(
                         'assets/fullllogo.png',
                         width: 280,

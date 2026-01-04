@@ -10,11 +10,13 @@ import '../game/constants.dart';
 class GameScreen extends StatefulWidget {
   final GameMode mode;
   final GameTheme theme;
+  final bool isInverted;
 
   const GameScreen({
     Key? key,
     this.mode = GameMode.classic,
     this.theme = GameTheme.fruit,
+    this.isInverted = false,
   }) : super(key: key);
 
   @override
@@ -27,7 +29,11 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    game = SuikaGame(gameMode: widget.mode, gameTheme: widget.theme);
+    game = SuikaGame(
+      gameMode: widget.mode, 
+      gameTheme: widget.theme,
+      isInverted: widget.isInverted,
+    );
   }
 
   @override

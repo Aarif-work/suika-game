@@ -60,20 +60,20 @@ enum FruitType {
 
   String getSpriteFile(GameTheme? theme) {
     if (theme == GameTheme.space) {
-      if (index == 0) return 'planet.png'; // New first planet
-      if (index == 1) return 'planet0.png'; // Was Mercury
-      if (index == 2) return 'planet1.png'; // Was Venus
-      if (index == 3) return 'planet2.png'; // Was Earth
-      if (index == 4) return 'planet3.png'; // Was Mars
-      if (index == 5) return 'planet4.png'; // Was Jupiter
-      if (index == 6) return 'planet5.png'; // Was Saturn
+      if (index == 0) return 'planets/planet.png'; // New first planet
+      if (index == 1) return 'planets/planet0.png'; // Was Mercury
+      if (index == 2) return 'planets/planet1.png'; // Was Venus
+      if (index == 3) return 'planets/planet2.png'; // Was Earth
+      if (index == 4) return 'planets/planet3.png'; // Was Mars
+      if (index == 5) return 'planets/planet4.png'; // Was Jupiter
+      if (index == 6) return 'planets/planet5.png'; // Was Saturn
       
       // Reuse bases for higher tiers with tints
-      if (index == 7) return 'planet2.png'; // Neptune base (reused)
-      if (index == 8) return 'planet4.png'; // Sun base (reused)
-      if (index == 9) return 'planet5.png'; // Black Hole base (reused)
+      if (index == 7) return 'planets/planet2.png'; // Neptune base (reused)
+      if (index == 8) return 'planets/planet4.png'; // Sun base (reused)
+      if (index == 9) return 'planets/planet5.png'; // Black Hole base (reused)
     }
-    return spriteFile;
+    return 'fruits/$spriteFile';
   }
 
   Color? getSpriteTint(GameTheme? theme) {

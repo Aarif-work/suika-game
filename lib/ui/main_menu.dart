@@ -134,6 +134,24 @@ class _MainMenuState extends State<MainMenu> {
                         ),
                         const SizedBox(height: 15),
                         _MenuButton(
+                          text: 'INVERTED MODE',
+                          emoji: '🌌',
+                          color: const Color(0xFF263238),
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GameScreen(
+                                  mode: GameMode.classic,
+                                  theme: _selectedTheme,
+                                  isInverted: true,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        _MenuButton(
                           text: 'HOW TO PLAY',
                           emoji: '❓',
                           color: const Color(0xFF2a9d8f),

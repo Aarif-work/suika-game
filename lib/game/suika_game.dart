@@ -17,16 +17,20 @@ import 'constants.dart';
 class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   final GameMode _gameMode;
   final GameTheme _gameTheme;
+  final bool _isInverted;
 
   GameMode get gameMode => _gameMode;
   GameTheme get gameTheme => _gameTheme;
+  bool get isInverted => _isInverted;
   
   SuikaGame({
     GameMode? gameMode,
     GameTheme? gameTheme,
+    bool isInverted = false,
   }) : _gameMode = gameMode ?? GameMode.classic,
        _gameTheme = gameTheme ?? GameTheme.fruit,
-       super(gravity: Vector2(0, 20));
+       _isInverted = isInverted,
+       super(gravity: Vector2(0, isInverted ? -20 : 20));
 
   double? _remainingTime;
   double? get remainingTime => _remainingTime;
@@ -80,7 +84,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     
     // Clamp to world boundaries with a small safety margin
     x = x.clamp(0.2, worldWidth - 0.2);
-    _pointerPosition = Vector2(x, 1.0);
+    _pointerPosition = Vector2(x, _isInverted ? worldHeight - 0.4 : 0.4);
   }
 
   // Queue for processing merges to avoid physics locking issues
@@ -91,7 +95,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
 
 
   // Input state
-  Vector2 _pointerPosition = Vector2(3.0, 1.0);
+  late Vector2 _pointerPosition;
   FruitType? _currentFruitType;
   final List<FruitType> _nextFruitQueue = []; // Queue of next 3 fruits
   bool _canDrop = true;
@@ -130,16 +134,23 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   }
   
   void _checkGameOver() {
-    const deadlineY = 0.8; // Deadline line near top
+    final deadlineY = _isInverted ? worldHeight - 0.8 : 0.8;
     
     for (final child in world.children) {
       if (child is Fruit) {
-        // Game over if fruit stays above deadline for more than 1.5s
-        // We use the top part of the fruit for detection
-        final fruitTopY = child.body.position.y - child.type.radius;
-        if (child.timeAlive > 1.5 && fruitTopY < deadlineY) {
-           _gameOver();
-           return;
+        // Game over if fruit stays beyond deadline for more than 1.5s
+        if (_isInverted) {
+          final fruitBottomY = child.body.position.y + child.type.radius;
+          if (child.timeAlive > 1.5 && fruitBottomY > deadlineY) {
+             _gameOver();
+             return;
+          }
+        } else {
+          final fruitTopY = child.body.position.y - child.type.radius;
+          if (child.timeAlive > 1.5 && fruitTopY < deadlineY) {
+             _gameOver();
+             return;
+          }
         }
       }
     }
@@ -197,6 +208,8 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
       _remainingTime = gameMode.durationSeconds!.toDouble();
     }
     
+    _pointerPosition = Vector2(worldWidth / 2, _isInverted ? worldHeight - 0.4 : 0.4);
+
     // Initial fruit
     _spawnNextFruit();
     
@@ -206,8 +219,12 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     // HUD is handled by EnhancedHUD widget overlay in GameScreen
 
     // Setup Walls using world dimensions
-    // Floor
-    await world.add(Wall(Vector2(0, worldHeight), Vector2(worldWidth, worldHeight)));
+    // Floor/Ceiling
+    if (_isInverted) {
+      await world.add(Wall(Vector2(0, 0), Vector2(worldWidth, 0))); // Ceiling
+    } else {
+      await world.add(Wall(Vector2(0, worldHeight), Vector2(worldWidth, worldHeight))); // Floor
+    }
     // Left Wall
     await world.add(Wall(Vector2(0, 0), Vector2(0, worldHeight)));
     // Right Wall
@@ -265,7 +282,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     final worldPosition = camera.globalToLocal(info.eventPosition.widget);
     double x = worldPosition.x;
     x = x.clamp(0.2, worldWidth - 0.2);
-    _pointerPosition = Vector2(x, 1.0);
+    _pointerPosition = Vector2(x, _isInverted ? worldHeight - 0.4 : 0.4);
   }
 
   void _processMerges() {

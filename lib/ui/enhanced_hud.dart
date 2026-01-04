@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../game/suika_game.dart';
 import '../game/constants.dart';
 
+import 'progression_bar.dart';
+
 class EnhancedHUD extends StatefulWidget {
   final SuikaGame game;
 
@@ -95,7 +97,7 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                             Icon(
                               Icons.timer,
                               color: time < 10 ? Colors.red : const Color(0xFF2a9d8f),
                               size: 20,
@@ -116,6 +118,13 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
                     ),
                   ),
                 if (widget.game.gameMode.durationSeconds != null) const Spacer(),
+                // Progression Button
+                _HUDButton(
+                  icon: Icons.list_alt,
+                  color: const Color(0xFFf4a261),
+                  onPressed: () => _showProgressionDialog(context),
+                ),
+                const SizedBox(width: 12),
                 // Pause Button
                 _HUDButton(
                   icon: Icons.pause,
@@ -129,6 +138,57 @@ class _EnhancedHUDState extends State<EnhancedHUD> {
             ),
             const Spacer(),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showProgressionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.95),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Fruit Evolution',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFe76f51),
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ProgressionBar(game: widget.game),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'GOT IT',
+                  style: TextStyle(
+                    color: Color(0xFF2a9d8f),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
