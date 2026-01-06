@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'main_menu.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -105,6 +106,9 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animation
     _controller.forward();
 
+    // Play splash audio
+    _playSplashAudio();
+
     // Navigate to MainMenu after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -126,8 +130,29 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
+  void _playSplashAudio() async {
+    try {
+      // Use bgm for more robust playback of longer tracks on web
+      if (!mounted) return;
+      await FlameAudio.bgm.play('splash_screen.mp3', volume: 0.6);
+    } catch (e) {
+      debugPrint('Error playing splash audio: $e');
+    }
+  }
+
+  void _stopSplashAudio() {
+    try {
+      if (FlameAudio.bgm.isPlaying) {
+        FlameAudio.bgm.stop();
+      }
+    } catch (e) {
+      debugPrint('Error stopping splash audio: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _stopSplashAudio();
     _controller.dispose();
     super.dispose();
   }
