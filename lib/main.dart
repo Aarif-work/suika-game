@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ui/splash_screen.dart';
 
 void main() {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Mobile Ads SDK
+  MobileAds.instance.initialize();
   
   // Set system UI styling for Android
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

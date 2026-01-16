@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
+import 'widgets/banner_ad_widget.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({Key? key}) : super(key: key);
@@ -25,8 +26,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -227,7 +231,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
             ],
           ),
-        ),
+              ),
+            ),
+          ),
+          const BannerAdWidget(),
+        ],
       ),
     );
   }

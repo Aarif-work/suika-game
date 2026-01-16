@@ -5,6 +5,7 @@ import 'game_screen.dart';
 import 'settings_screen.dart';
 import 'leaderboard_screen.dart';
 import 'widgets/atmosphere_background.dart';
+import 'widgets/banner_ad_widget.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({Key? key}) : super(key: key);
@@ -43,28 +44,31 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
     final Color accentColor = isSpace ? const Color(0xFF00d2ff) : const Color(0xFFe76f51);
 
     return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isSpace 
-              ? [const Color(0xFF0f0c29), const Color(0xFF302b63), const Color(0xFF24243e)]
-              : [const Color(0xFFfff1eb), const Color(0xFFace0f9)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Stack(
-          children: [
-            AtmosphereBackground(theme: _selectedTheme),
-            SafeArea(
-              child: SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: Column(
-                    children: [
+      body: Column(
+        children: [
+          Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isSpace 
+                    ? [const Color(0xFF0f0c29), const Color(0xFF302b63), const Color(0xFF24243e)]
+                    : [const Color(0xFFfff1eb), const Color(0xFFace0f9)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  AtmosphereBackground(theme: _selectedTheme),
+                  SafeArea(
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                        ),
+                        child: Column(
+                          children: [
                       const SizedBox(height: 60),
                   // Theme Selection (Replacing the Logo)
                   Row(
@@ -229,7 +233,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Text(
-                      'Made with Flutter & Flame',
+                      'Developed by Hope3 Services',
                       style: TextStyle(
                         color: isSpace ? Colors.white60 : Colors.black45,
                         fontSize: 12,
@@ -237,16 +241,20 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  ),
-);
-}
+          const BannerAdWidget(),
+        ],
+      ),
+    );
+  }
 
 
 
