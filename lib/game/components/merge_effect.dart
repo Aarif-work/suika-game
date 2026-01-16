@@ -9,13 +9,15 @@ class MergeEffect extends PositionComponent with HasGameReference<SuikaGame> {
   final FruitType fromType;
   final FruitType toType;
   final Vector2 mergePosition;
+  final double multiplier;
   double animationTime = 0;
-  final double effectDuration = 1.5; // Increased duration for "extra time"
+  final double effectDuration = 1.5;
 
   MergeEffect({
     required this.fromType,
     required this.toType,
     required this.mergePosition,
+    this.multiplier = 1.0,
   });
 
   @override
@@ -72,15 +74,18 @@ class MergeEffect extends PositionComponent with HasGameReference<SuikaGame> {
     
     // Score popup - Clearly visible white points
     final scoreOpacity = (1.0 - progress).clamp(0.0, 1.0);
-    final scoreY = -progress * toType.radius * 3; // Float higher up
+    final scoreY = -progress * toType.radius * 3;
     
+    final multiplierText = multiplier > 1.0 ? ' x${multiplier.toStringAsFixed(1)}' : '';
+    final scoreColor = multiplier >= 2.0 ? const Color(0xFFFFD700) : Colors.white; // Gold for x2+
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '+${toType.score}',
+        text: '+${(toType.score * multiplier).toInt()}$multiplierText',
         style: TextStyle(
-          fontSize: toType.radius * 1.2, // Larger font
+          fontSize: toType.radius * (multiplier > 1.0 ? 1.4 : 1.2),
           fontWeight: FontWeight.w900,
-          color: Colors.white.withOpacity(scoreOpacity),
+          color: scoreColor.withOpacity(scoreOpacity),
           shadows: [
             Shadow(
               color: Colors.black.withOpacity(scoreOpacity * 0.8),

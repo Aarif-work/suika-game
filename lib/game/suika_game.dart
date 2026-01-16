@@ -1,6 +1,7 @@
 import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
@@ -107,9 +108,14 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
 
   int _score = 0;
   int _highScore = 0;
+  bool _isGameOver = false;
   
   int get highScore => _highScore;
-  bool _isGameOver = false;
+
+  // Combo state
+  int _comboCount = 0;
+  double _lastMergeTime = 0;
+  static const double comboWindow = 2.0; // Seconds
 
   @override
   void update(double dt) {
@@ -124,8 +130,65 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
       }
     }
 
+    // Update combo expiration
+    if (_comboCount > 0 && currentTime() - _lastMergeTime > comboWindow) {
+      _comboCount = 0;
+    }
+
+    // 3️⃣ INVERTED MODE: Gravity curve
+    if (_isInverted) {
+      _applyInvertedGravityCurve();
+    }
+
+    // 5️⃣ ANTI-TOWER: Stack detection and drift
+    _applyAntiTowerForces();
+
     _processMerges();
     _checkGameOver();
+  }
+
+  void _applyInvertedGravityCurve() {
+    for (final child in world.children) {
+      if (child is Fruit) {
+        // Grav is stronger near the bottom (inverted ceiling)
+        // Ceiling is at worldHeight, floor is at 0
+        final distanceToCeiling = child.body.position.y; // 0 is top of screen (floor in inverted)
+        // Normalize 0 to 1 where 0 is floor and 1 is ceiling
+        final factor = (distanceToCeiling / worldHeight).clamp(0.0, 1.0);
+        // We want stronger grav near the floor (y=0) because in inverted mode they fall UP
+        // Wait, if _isInverted is true, gravity vector is (0, -20).
+        // They fall towards y=0. So floor is y=7, ceiling is y=0.
+        // Let's make it stronger near y=0.
+        final curveFactor = 1.0 + (1.0 - factor) * 1.5; 
+        child.body.applyForce(Vector2(0, -20 * curveFactor * child.body.mass));
+      }
+    }
+  }
+
+  void _applyAntiTowerForces() {
+    final fruits = world.children.whereType<Fruit>().toList();
+    for (int i = 0; i < fruits.length; i++) {
+      final f1 = fruits[i];
+      if (f1.timeAlive < 1.0) continue; // Let it settle first
+
+      int stackHeight = 0;
+      for (int j = 0; j < fruits.length; j++) {
+        if (i == j) continue;
+        final f2 = fruits[j];
+        // If f1 is above f2 and they have similar X
+        final isAbove = _isInverted ? (f1.body.position.y > f2.body.position.y) : (f1.body.position.y < f2.body.position.y);
+        if (isAbove && (f1.body.position.x - f2.body.position.x).abs() < f1.type.radius * 0.5) {
+          stackHeight++;
+        }
+      }
+
+      if (stackHeight >= 2) {
+        // Apply micro horizontal noise and torque reduction
+        final driftDir = Random().nextBool() ? 1.0 : -1.0;
+        f1.body.applyForce(Vector2(driftDir * 2.0 * stackHeight, 0));
+        f1.body.angularVelocity *= 0.9; // Reduce spinning to stabilize
+      }
+    }
   }
 
   void onMerge(Fruit a, Fruit b) {
@@ -165,13 +228,6 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
       _highScore = _score;
     }
     
-    // Print final score to console
-    print('========================================');
-    print('GAME OVER!');
-    print('Final Score: $_score');
-    print('High Score: $_highScore');
-    print('========================================');
-    
     pauseEngine();
     overlays.add('GameOver');
   }
@@ -184,6 +240,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     }
     
     _score = 0;
+    _comboCount = 0;
     _isGameOver = false;
     _canDrop = true;
     _merges.clear();
@@ -221,7 +278,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     // Setup Walls using world dimensions
     // Floor/Ceiling
     if (_isInverted) {
-      await world.add(Wall(Vector2(0, 0), Vector2(worldWidth, 0))); // Ceiling
+      await world.add(Wall(Vector2(0, 0), Vector2(worldWidth, 0))); // Ceiling (physical bottom)
     } else {
       await world.add(Wall(Vector2(0, worldHeight), Vector2(worldWidth, worldHeight))); // Floor
     }
@@ -257,19 +314,14 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   }
 
   void _spawnNextFruit() {
-    // Initialize queue if empty
     if (_nextFruitQueue.isEmpty) {
       for (int i = 0; i < 3; i++) {
         _nextFruitQueue.add(_generateRandomFruit());
       }
     }
     
-    // Take first fruit from queue
     _currentFruitType = _nextFruitQueue.removeAt(0);
-    
-    // Add new fruit to end of queue
     _nextFruitQueue.add(_generateRandomFruit());
-    
     _canDrop = true;
   }
   
@@ -285,6 +337,8 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     _pointerPosition = Vector2(x, _isInverted ? worldHeight - 0.4 : 0.4);
   }
 
+  double currentTime() => DateTime.now().millisecondsSinceEpoch / 1000.0;
+
   void _processMerges() {
     final processed = <Fruit>{};
     for (final merge in _merges) {
@@ -297,35 +351,69 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
       processed.add(a);
       processed.add(b);
       
-      // Calculate midpoint
+      // 4️⃣ COMBO SYSTEM: Update combo state
+      final combinedCurrentTime = currentTime();
+      if (combinedCurrentTime - _lastMergeTime < comboWindow) {
+        _comboCount++;
+      } else {
+        _comboCount = 1;
+      }
+      _lastMergeTime = combinedCurrentTime;
+
+      // Multipliers: x1 → x1.5 → x2 → x3
+      double multiplier = 1.0;
+      if (_comboCount == 2) multiplier = 1.5;
+      else if (_comboCount == 3) multiplier = 2.0;
+      else if (_comboCount >= 4) multiplier = 3.0;
+
+      // Camera Shake (using effects)
+      camera.viewfinder.add(
+        MoveByEffect(
+          Vector2(0.035 * multiplier, 0.035 * multiplier),
+          EffectController(duration: 0.05, reverseDuration: 0.05, repeatCount: 3),
+        ),
+      );
+
+      // 2️⃣ FASTER GAMEPLAY: Post-merge pulse
+      _triggerPostMergePulse(a.body.position, a.type.radius * 2);
+      
       final midPoint = (a.body.position + b.body.position) / 2;
       
-      // Add merge effect
+      // Add merge effect with combo info
       world.add(MergeEffect(
         fromType: a.type,
         toType: FruitType.values[a.type.index + 1],
         mergePosition: midPoint,
+        multiplier: multiplier,
       ));
       
-      // Remove old fruits
       world.remove(a);
       world.remove(b);
       
-      // Spawn next tier
       final nextIndex = a.type.index + 1;
       if (nextIndex < FruitType.values.length) {
         final nextType = FruitType.values[nextIndex];
         world.add(Fruit(nextType, midPoint));
-        _score += nextType.score;
+        _score += (nextType.score * multiplier).toInt();
         
-        // Play merge sound
         try {
           FlameAudio.play(nextType.audioFile);
-        } catch (e) {
-          // Audio playback failed
-        }
+        } catch (e) {}
       }
     }
     _merges.clear();
+  }
+
+  void _triggerPostMergePulse(Vector2 position, double radius) {
+    for (final child in world.children) {
+      if (child is Fruit) {
+        final diff = child.body.position - position;
+        final dist = diff.length;
+        if (dist > 0 && dist < radius * 3) {
+          diff.normalize();
+          child.body.applyLinearImpulse(diff * (5.0 / (dist + 1)));
+        }
+      }
+    }
   }
 }

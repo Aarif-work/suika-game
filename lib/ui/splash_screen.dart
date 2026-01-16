@@ -134,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       // Use bgm for more robust playback of longer tracks on web
       if (!mounted) return;
-      await FlameAudio.bgm.play('splash_screen.mp3', volume: 0.6);
+      await FlameAudio.bgm.play('splash-screen2.mp3', volume: 0.6);
     } catch (e) {
       debugPrint('Error playing splash audio: $e');
     }
