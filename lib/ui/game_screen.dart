@@ -5,6 +5,7 @@ import '../game/components/game_over_overlay.dart';
 import 'pause_overlay.dart';
 import 'enhanced_hud.dart';
 import 'widgets/atmosphere_background.dart';
+import 'widgets/banner_ad_widget.dart';
 
 import '../game/constants.dart';
 
@@ -40,7 +41,10 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: widget.theme == GameTheme.space
@@ -100,6 +104,10 @@ class _GameScreenState extends State<GameScreen> {
             );
           }
         ),
+            ),
+          ),
+          const BannerAdWidget(),
+        ],
       ),
     );
   }
