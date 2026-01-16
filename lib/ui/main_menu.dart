@@ -15,7 +15,6 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   GameTheme _selectedTheme = GameTheme.fruit;
-  bool _isInverted = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -146,30 +145,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                     }).toList(),
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Gravity Selection
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildGravityOption(
-                        label: 'Normal',
-                        icon: Icons.arrow_downward,
-                        isActive: !_isInverted,
-                        accentColor: accentColor,
-                        onTap: () => setState(() => _isInverted = false),
-                      ),
-                      _buildGravityOption(
-                        label: 'Inverted',
-                        icon: Icons.arrow_upward,
-                        isActive: _isInverted,
-                        accentColor: accentColor,
-                        onTap: () => setState(() => _isInverted = true),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 40),
                   
                   // Game Title
                   Text(
@@ -208,7 +184,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                                 builder: (context) => GameScreen(
                                   mode: GameMode.classic,
                                   theme: _selectedTheme,
-                                  isInverted: _isInverted,
+                                  isInverted: false,
                                 ),
                               ),
                             );
@@ -273,212 +249,48 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
 }
 
 
-  Widget _buildGravityOption({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ScaleTransition(
-        scale: isActive ? _pulseAnimation : const AlwaysStoppedAnimation(1.0),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: isActive ? Colors.white.withOpacity(0.95) : Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isActive ? accentColor : Colors.white.withOpacity(0.9),
-                      width: isActive ? 2.5 : 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isActive 
-                          ? accentColor.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.08),
-                        blurRadius: isActive ? 12 : 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                    gradient: isActive ? LinearGradient(
-                      colors: [
-                        Colors.white,
-                        accentColor.withOpacity(0.15),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ) : null,
-                  ),
-                  child: Row(
-                    children: [
-                      _PhoneIcon(
-                        icon: icon,
-                        isActive: isActive,
-                        accentColor: accentColor,
-                        isInverted: label.toLowerCase() == 'inverted',
-                      ),
-                      const SizedBox(width: 10),
-                       Text(
-                        label.toUpperCase(),
-                        style: TextStyle(
-                          color: isActive ? accentColor : Colors.black54,
-                          fontWeight: isActive ? FontWeight.w900 : FontWeight.bold,
-                          fontSize: 11,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (isActive)
-              Positioned(
-                top: -6,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.check_circle,
-                    color: accentColor,
-                    size: 20,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   void _showHowToPlay(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => _InfoDialog(
         title: 'How to Play',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _InfoItem('🎯', 'Tap to drop fruits'),
-            _InfoItem('🍉', 'Merge same fruits to score'),
-            _InfoItem('⬆️', 'Inverted mode: fruits fall UP!'),
-            _InfoItem('🏆', 'Reach the max fruit to win'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PhoneIcon extends StatelessWidget {
-  final IconData icon;
-  final bool isActive;
-  final Color accentColor;
-  final bool isInverted;
-
-  const _PhoneIcon({
-    required this.icon,
-    required this.isActive,
-    required this.accentColor,
-    required this.isInverted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isActive ? accentColor : Colors.black87;
-    final bodyColor = isActive ? Colors.white : Colors.white.withOpacity(0.9);
-    
-    // To have the arrow point UP when the phone is flipped (inverted),
-    // we use Icons.arrow_downward and let the 180deg rotation handle it.
-    final displayIcon = Icons.arrow_downward;
-    
-    return Transform.rotate(
-      angle: isInverted ? 3.14159 : 0, // 180 degrees for inverted
-      child: Container(
-        width: 32,
-        height: 52,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: bodyColor,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: color.withOpacity(0.4),
-            width: 1.5,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _InfoItem('🎯', 'Tap to drop ${_selectedTheme == GameTheme.space ? 'planets' : 'fruits'}'),
+              _InfoItem('🍉', 'Merge same ${_selectedTheme == GameTheme.space ? 'planets' : 'fruits'} to score'),
+              _InfoItem('🏆', 'Reach the max ${_selectedTheme == GameTheme.space ? 'planet' : 'fruit'} to win'),
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Score Points:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFe76f51),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...FruitType.values.map((type) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Text(type.getEmoji(_selectedTheme), style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${type.score} pts',
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF6d6875)),
+                    ),
+                  ],
+                ),
+              )),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Home indicator/Notch area
-            Positioned(
-              top: 0,
-              child: Container(
-                width: 12,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(1),
-                ),
-              ),
-            ),
-            // Screen area
-            Container(
-              margin: const EdgeInsets.only(top: 4, bottom: 2),
-              decoration: BoxDecoration(
-                color: isActive ? color.withOpacity(0.05) : Colors.transparent,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: Center(
-                child: Icon(
-                  displayIcon,
-                  color: color,
-                  size: 18,
-                ),
-              ),
-            ),
-            // Home button detail
-            Positioned(
-              bottom: 0,
-              child: Container(
-                width: 4,
-                height: 1,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(0.5),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -549,6 +361,9 @@ class _InfoDialog extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.9),
@@ -567,7 +382,7 @@ class _InfoDialog extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                content,
+                Flexible(child: content),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
