@@ -47,7 +47,7 @@ class Spawner extends PositionComponent with HasGameReference<SuikaGame> {
     
     if (game.currentFruitType != null) {
       final type = game.currentFruitType!;
-      final visualDiameter = type.radius * 2 * Constants.visualMargin;
+      final visualDiameter = type.radius * 2 * Constants.getVisualMargin(game.gameTheme);
       
       if (_currentSprite != null) {
         final tint = type.getSpriteTint(game.gameTheme);

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'widgets/atmosphere_background.dart';
+import '../game/constants.dart';
 import 'main_menu.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,117 +15,90 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   
-  // First stage - Big logo
-  late Animation<double> _bigLogoFadeInAnimation;
-  late Animation<double> _bigLogoScaleAnimation;
-  late Animation<double> _bigLogoFadeOutAnimation;
-  
-  // Second stage - Full logo
-  late Animation<double> _fullLogoFadeInAnimation;
-  late Animation<double> _fullLogoScaleAnimation;
-  
-  // Final fade out
-  late Animation<double> _fadeOutAnimation;
+  // Animation for elements
+  late Animation<double> _welcomeFadeAnimation;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<double> _logoFadeAnimation;
+  late Animation<double> _titleFadeAnimation;
+  late Animation<double> _taglineFadeAnimation;
+  late Animation<double> _footerFadeAnimation;
+  late Animation<double> _screenFadeOutAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Main animation controller (5.5 seconds total)
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 5500),
+      duration: const Duration(milliseconds: 7000),
       vsync: this,
     );
 
-    // STAGE 1: Big Logo (0.0 - 2.5s)
-    // Big logo fade in (0.0 - 0.8s)
-    _bigLogoFadeInAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
+    // Welcome text (0.0 - 0.5s equivalent in 7s)
+    _welcomeFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.15, curve: Curves.easeInOut),
+        curve: const Interval(0.0, 0.15, curve: Curves.easeIn),
       ),
     );
 
-    // Big logo scale (0.0 - 0.8s)
-    _bigLogoScaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(
+    // Logo (0.5 - 2s)
+    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.15, curve: Curves.easeOutCubic),
+        curve: const Interval(0.1, 0.3, curve: Curves.easeIn),
+      ),
+    );
+    _logoScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.35, curve: Curves.easeOutBack),
       ),
     );
 
-    // Big logo fade out (1.8 - 2.5s)
-    _bigLogoFadeOutAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
+    // Title (2s - 4s)
+    _titleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.33, 0.45, curve: Curves.easeInOut),
+        curve: const Interval(0.3, 0.5, curve: Curves.easeIn),
       ),
     );
 
-    // STAGE 2: Full Logo (2.3 - 5.0s)
-    // Full logo fade in (2.3 - 3.0s)
-    _fullLogoFadeInAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
+    // Tagline (3s - 5s)
+    _taglineFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.42, 0.55, curve: Curves.easeInOut),
+        curve: const Interval(0.4, 0.6, curve: Curves.easeIn),
       ),
     );
 
-    // Full logo scale (2.3 - 3.0s)
-    _fullLogoScaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(
+    // Footer (4s - 6s)
+    _footerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.42, 0.55, curve: Curves.easeOutCubic),
+        curve: const Interval(0.5, 0.75, curve: Curves.easeIn),
       ),
     );
 
-    // Final fade out (4.5 - 5.5s)
-    _fadeOutAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
+    // Screen Fade Out (6s - 7s)
+    _screenFadeOutAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.82, 1.0, curve: Curves.easeInOut),
+        curve: const Interval(0.85, 1.0, curve: Curves.easeInOut),
       ),
     );
 
-    // Start animation
     _controller.forward();
-
-    // Play splash audio
     _playSplashAudio();
 
-    // Navigate to MainMenu after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const MainMenu(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
+            pageBuilder: (context, animation, secondaryAnimation) => const MainMenu(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
             },
-            transitionDuration: const Duration(milliseconds: 600),
+            transitionDuration: const Duration(milliseconds: 800),
           ),
         );
       }
@@ -132,7 +107,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _playSplashAudio() async {
     try {
-      // Use bgm for more robust playback of longer tracks on web
       if (!mounted) return;
       await FlameAudio.bgm.play('splash-screen2.mp3', volume: 0.6);
     } catch (e) {
@@ -159,35 +133,144 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Background based on theme
+    const splashTheme = GameTheme.fruit;
+    
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _fadeOutAnimation.value,
-            child: Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Stage 2: Full Logo
-                  Opacity(
-                    opacity: _fullLogoFadeInAnimation.value,
-                    child: Transform.scale(
-                      scale: _fullLogoScaleAnimation.value,
-                      child: Image.asset(
-                        'assets/fullllogo.png',
-                        width: 280,
-                        height: 280,
-                        fit: BoxFit.contain,
+      backgroundColor: const Color(0xFF0F172A), // Darker base for theme
+      body: Stack(
+        children: [
+          // 1. Dynamic Game Theme Background
+          const AtmosphereBackground(theme: splashTheme),
+          
+          // 2. Main Content
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _screenFadeOutAnimation.value,
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 100),
+                      // "Welcome to" header
+                      FadeTransition(
+                        opacity: _welcomeFadeAnimation,
+                        child: const Text(
+                          'Welcome to',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w300,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
-                    ),
+                      const Spacer(),
+                      // Circular Logo Container
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ScaleTransition(
+                            scale: _logoScaleAnimation,
+                            child: FadeTransition(
+                              opacity: _logoFadeAnimation,
+                              child: Container(
+                                width: 220,
+                                height: 220,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1), // Glassmorphism style
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+                                ),
+                              ),
+                            ),
+                          ),
+                          ScaleTransition(
+                            scale: _logoScaleAnimation,
+                            child: FadeTransition(
+                              opacity: _logoFadeAnimation,
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/game logo.png',
+                                  width: 170,
+                                  height: 170,
+                                  fit: BoxFit.cover, // Cover to ensure circle fit
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 60),
+                      // Title
+                      FadeTransition(
+                        opacity: _titleFadeAnimation,
+                        child: const Text(
+                          'SUIKA GAME',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Tagline
+                      FadeTransition(
+                        opacity: _taglineFadeAnimation,
+                        child: const Text(
+                          'Merge & Grow',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                      // Footer
+                      FadeTransition(
+                        opacity: _footerFadeAnimation,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 40),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Developed by ',
+                                style: TextStyle(
+                                  color: Colors.white30,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.bolt,
+                                color: Colors.blueAccent,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Hope3 Services',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          );
-        },
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

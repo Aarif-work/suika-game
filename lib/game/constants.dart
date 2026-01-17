@@ -3,7 +3,16 @@ import 'package:flutter/material.dart';
 class Constants {
   static const double gameWidth = 600;
   static const double gameHeight = 900;
-  static const double visualMargin = 1.05; // Assets rendered at 105% to ensure visual contact (compensating for sprite padding)
+  
+  // Method to get visual margin based on theme
+  static double getVisualMargin(GameTheme? theme) {
+    // Space assets are full-bleed (no padding), so they need exact fit (1.0) to match physics circle.
+    if (theme == GameTheme.space) return 1.25;
+    
+    // Fruit assets have some internal transparent padding, so we render them slightly larger (1.05)
+    // to make the visible fruit boundaries match the physics circle.
+    return 1.05; 
+  }
 }
 
 enum GameMode {
@@ -65,28 +74,13 @@ enum FruitType {
 
   String getSpriteFile(GameTheme? theme) {
     if (theme == GameTheme.space) {
-      if (index == 0) return 'planets/planet.png'; // New first planet
-      if (index == 1) return 'planets/planet0.png'; // Was Mercury
-      if (index == 2) return 'planets/planet1.png'; // Was Venus
-      if (index == 3) return 'planets/planet2.png'; // Was Earth
-      if (index == 4) return 'planets/planet3.png'; // Was Mars
-      if (index == 5) return 'planets/planet4.png'; // Was Jupiter
-      if (index == 6) return 'planets/planet5.png'; // Was Saturn
-      
-      // Reuse bases for higher tiers with tints
-      if (index == 7) return 'planets/planet2.png'; // Neptune base (reused)
-      if (index == 8) return 'planets/planet4.png'; // Sun base (reused)
-      if (index == 9) return 'planets/planet5.png'; // Black Hole base (reused)
+      // Map indices 0-9 to 1.png - 10.png
+      return 'planets/${index + 1}.png';
     }
     return 'fruits/$spriteFile';
   }
 
   Color? getSpriteTint(GameTheme? theme) {
-    if (theme == GameTheme.space) {
-      if (index == 7) return const Color(0xFF0D47A1).withOpacity(0.6); // Neptune Deep Blue tint
-      if (index == 8) return const Color(0xFFFFEB3B).withOpacity(0.5); // Sun Yellow tint
-      if (index == 9) return const Color(0xFF673AB7).withOpacity(0.7); // Black Hole Purple tint
-    }
     return null;
   }
 

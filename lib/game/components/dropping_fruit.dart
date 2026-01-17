@@ -24,7 +24,7 @@ class DroppingFruit extends PositionComponent with HasGameReference<SuikaGame> {
     anchor = Anchor.center;
     
     try {
-      _sprite = await game.loadSprite(type.spriteFile);
+      _sprite = await game.loadSprite(type.getSpriteFile(game.gameTheme));
     } catch (e) {
       // Sprite loading failed
     }
@@ -41,7 +41,7 @@ class DroppingFruit extends PositionComponent with HasGameReference<SuikaGame> {
       // Easing function for bouncy drop
       final easedProgress = _easeOutBounce(progress);
       
-      position = Vector2.lerp(startPosition, targetPosition, easedProgress)!;
+      position = startPosition.clone()..lerp(targetPosition, easedProgress);
       
       if (progress >= 1.0) {
         hasLanded = true;
@@ -83,8 +83,8 @@ class DroppingFruit extends PositionComponent with HasGameReference<SuikaGame> {
     canvas.rotate(animationTime * 2);
 
     if (_sprite != null) {
-      // Sprite size = 1.9x radius (fits within physics body)
-      final size = radius * 1.9;
+      // Sprite size matches physical fruit visual size
+      final size = radius * 2 * Constants.getVisualMargin(game.gameTheme);
       _sprite!.render(
         canvas,
         position: Vector2(-size / 2, -size / 2),

@@ -89,7 +89,7 @@ class Fruit extends BodyComponent<SuikaGame> with ContactCallbacks {
 
   @override
   void render(Canvas canvas) {
-    double margin = Constants.visualMargin;
+    double margin = Constants.getVisualMargin(game.gameTheme);
     final visualDiameter = type.radius * 2 * margin;
     
     if (_sprite != null) {
