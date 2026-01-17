@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "747961835856",
+    "project_id": "suika-hope3",
+    "storage_bucket": "suika-hope3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:747961835856:android:35c01c82a3052e5adb4c55",
+        "android_client_info": {
+          "package_name": "com.example.suika_game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK6eiTIjbExmO7NZteL8K6Z5pMDzWkFUA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

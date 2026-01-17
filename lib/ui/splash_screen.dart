@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'widgets/atmosphere_background.dart';
+import 'widgets/user_setup_dialog.dart';
 import '../game/constants.dart';
+import '../services/auth_service.dart';
 import 'main_menu.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -92,17 +94,42 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const MainMenu(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 800),
-          ),
-        );
+        _checkUserSetup();
       }
     });
+  }
+
+  void _checkUserSetup() async {
+    final isFirstTime = await AuthService.isFirstTime();
+    
+    if (isFirstTime) {
+      _showUserSetupDialog();
+    } else {
+      await AuthService.signInAnonymously();
+      _navigateToMainMenu();
+    }
+  }
+  
+  void _showUserSetupDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => UserSetupDialog(
+        onComplete: _navigateToMainMenu,
+      ),
+    );
+  }
+  
+  void _navigateToMainMenu() {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const MainMenu(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 800),
+      ),
+    );
   }
 
   void _playSplashAudio() async {
