@@ -2,11 +2,33 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../game/suika_game.dart';
 import 'main_menu.dart';
+import 'package:flame_audio/flame_audio.dart';
 
-class PauseOverlay extends StatelessWidget {
+class PauseOverlay extends StatefulWidget {
   final SuikaGame game;
 
   const PauseOverlay({Key? key, required this.game}) : super(key: key);
+
+  @override
+  State<PauseOverlay> createState() => _PauseOverlayState();
+}
+
+class _PauseOverlayState extends State<PauseOverlay> {
+  bool isSoundEnabled = true;
+
+  void _toggleSound() {
+    setState(() {
+      isSoundEnabled = !isSoundEnabled;
+      
+      if (isSoundEnabled) {
+        // Enable sound
+        FlameAudio.bgm.resume();
+      } else {
+        // Disable sound - stop both BGM and sound effects
+        FlameAudio.bgm.pause();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +36,7 @@ class PauseOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: () {}, // Absorb taps so they don't reach the game
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withOpacity(0),
         width: double.infinity,
         height: double.infinity,
         child: Center(
@@ -23,126 +45,184 @@ class PauseOverlay extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
-                width: 280,
+                width: 320,
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white.withOpacity(0.5)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black26,
-                      blurRadius: 10,
-                      spreadRadius: 2,
+                      blurRadius: 20,
+                      spreadRadius: 5,
                     )
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.pause_circle_filled,
-                      size: 64,
-                      color: Color(0xFF2a9d8f),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2a9d8f).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.pause_circle_filled,
+                        size: 48,
+                        color: Color(0xFF2a9d8f),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
                       'PAUSED',
                       style: TextStyle(
-                        color: Color(0xFFe76f51),
-                        fontSize: 28,
+                        color: Color(0xFF2a9d8f),
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _PauseButton(
-                      text: 'RESUME',
-                      icon: Icons.play_arrow,
-                      color: const Color(0xFF2a9d8f),
-                      onPressed: () {
-                        game.overlays.remove('Pause');
-                        game.resumeEngine();
-                      },
+                    // Sound Toggle Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _toggleSound,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF6d6875),
+                          side: BorderSide(
+                            color: const Color(0xFF6d6875).withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isSoundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isSoundEnabled ? 'SOUND ON' : 'SOUND OFF',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _PauseButton(
-                      text: 'RESTART',
-                      icon: Icons.refresh,
-                      color: const Color(0xFFf4a261),
-                      onPressed: () {
-                        game.overlays.remove('Pause');
-                        game.reset();
-                      },
+                    // Resume Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          widget.game.overlays.remove('Pause');
+                          widget.game.resumeEngine();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2a9d8f),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, size: 24),
+                            SizedBox(width: 8),
+                            Text(
+                              'RESUME',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _PauseButton(
-                      text: 'HOME',
-                      icon: Icons.home,
-                      color: const Color(0xFFe76f51),
+                    // Restart Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          widget.game.overlays.remove('Pause');
+                          widget.game.reset();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFf4a261),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.refresh_rounded, size: 24),
+                            SizedBox(width: 8),
+                            Text(
+                              'RESTART',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Home Button (Text Button)
+                    TextButton(
                       onPressed: () {
-                        // Ensure overlay is removed and engine resumed or disposed properly,
-                        // though pushing replacement usually handles the widget disposal.
-                        // Ideally we cleanup.
-                        game.overlays.remove('Pause');
-                        // Navigate to MainMenu
+                        widget.game.overlays.remove('Pause');
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => MainMenu()),
                         );
                       },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF6d6875),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.home_rounded, size: 20),
+                          SizedBox(width: 6),
+                          Text(
+                            'HOME',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PauseButton extends StatelessWidget {
-  final String text;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _PauseButton({
-    required this.text,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
         ),
       ),
     );

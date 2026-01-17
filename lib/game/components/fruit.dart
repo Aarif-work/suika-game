@@ -23,6 +23,9 @@ class Fruit extends BodyComponent<SuikaGame> with ContactCallbacks {
   }
 
   void _processAttraction(double dt) {
+    // 3️⃣ STABILITY: Don't apply invisible forces if the fruit is resting
+    if (body.linearVelocity.length < 0.2 && body.angularVelocity.abs() < 0.2) return;
+
     _sameTierContactTimers.forEach((other, duration) {
       if (other.isRemoved) return;
       
@@ -57,8 +60,8 @@ class Fruit extends BodyComponent<SuikaGame> with ContactCallbacks {
     final fixtureDef = FixtureDef(
       shape,
       restitution: type.restitution, // 2️⃣ FASTER GAMEPLAY: Tier-based restitution
-      friction: 0.15,
-      density: 1.0,
+      friction: 0.3, // Stability: Higher friction to prevent sliding
+      density: 1.0 / (type.radius * 0.5 + 0.5), // Stability: Reduce density for large fruits to prevent crushing
     );
 
     final bodyDef = BodyDef(
