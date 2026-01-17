@@ -182,7 +182,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                           emoji: '▶️',
                           color: accentColor,
                           onPressed: () {
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => GameScreen(

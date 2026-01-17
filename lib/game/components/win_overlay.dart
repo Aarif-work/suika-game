@@ -1,51 +1,64 @@
 import 'package:flutter/material.dart';
+import '../suika_game.dart';
 import 'dart:ui';
-import '../game/suika_game.dart';
-import 'main_menu.dart';
-import 'package:flame_audio/flame_audio.dart';
 
-class PauseOverlay extends StatefulWidget {
+class WinOverlay extends StatefulWidget {
   final SuikaGame game;
 
-  const PauseOverlay({Key? key, required this.game}) : super(key: key);
+  const WinOverlay({Key? key, required this.game}) : super(key: key);
 
   @override
-  State<PauseOverlay> createState() => _PauseOverlayState();
+  State<WinOverlay> createState() => _WinOverlayState();
 }
 
-class _PauseOverlayState extends State<PauseOverlay> {
-  bool isSoundEnabled = true;
+class _WinOverlayState extends State<WinOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
 
-  void _toggleSound() {
-    setState(() {
-      isSoundEnabled = !isSoundEnabled;
-      
-      if (isSoundEnabled) {
-        // Enable sound
-        FlameAudio.bgm.resume();
-      } else {
-        // Disable sound - stop both BGM and sound effects
-        FlameAudio.bgm.pause();
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+    ));
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Full screen container to block touches and dim background
-    return GestureDetector(
-      onTap: () {}, // Absorb taps so they don't reach the game
-      child: Container(
-        color: Colors.black.withOpacity(0),
-        width: double.infinity,
-        height: double.infinity,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Center(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
-                width: 320,
+                width: 330,
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.95),
@@ -63,72 +76,75 @@ class _PauseOverlayState extends State<PauseOverlay> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
                         color: const Color(0xFF2a9d8f).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.pause_circle_filled,
-                        size: 48,
+                        Icons.emoji_events_rounded,
+                        size: 54,
                         color: Color(0xFF2a9d8f),
                       ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'PAUSED',
+                      'CONGRATS!',
                       style: TextStyle(
                         color: Color(0xFF2a9d8f),
                         fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         letterSpacing: 2,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    // Sound Toggle Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _toggleSound,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF6d6875),
-                          side: BorderSide(
-                            color: const Color(0xFF6d6875).withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isSoundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isSoundEnabled ? 'SOUND ON' : 'SOUND OFF',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                    const Text(
+                      'You Reached the Goal!',
+                      style: TextStyle(
+                        color: Color(0xFF6d6875),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // Resume Button
+                    const SizedBox(height: 24),
+                    // Your Score Container
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFf4a261).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'FINAL SCORE',
+                            style: TextStyle(
+                              color: Color(0xFF6d6875),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${widget.game.score}',
+                            style: const TextStyle(
+                              color: Color(0xFFf4a261),
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Continue Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          widget.game.overlays.remove('Pause');
-                          widget.game.resumeEngine();
+                          widget.game.resumeFromWin();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2a9d8f),
@@ -145,7 +161,7 @@ class _PauseOverlayState extends State<PauseOverlay> {
                             Icon(Icons.play_arrow_rounded, size: 24),
                             SizedBox(width: 8),
                             Text(
-                              'RESUME',
+                              'KEEP PLAYING',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -159,29 +175,28 @@ class _PauseOverlayState extends State<PauseOverlay> {
                     // Restart Button
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: () {
-                          widget.game.overlays.remove('Pause');
                           widget.game.reset();
+                          widget.game.overlays.remove('Win');
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFf4a261),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF6d6875),
+                          side: const BorderSide(color: Color(0xFF6d6875), width: 1.5),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 4,
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.refresh_rounded, size: 24),
+                            Icon(Icons.refresh_rounded, size: 20),
                             SizedBox(width: 8),
                             Text(
-                              'RESTART',
+                              'TRY AGAIN',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -190,10 +205,10 @@ class _PauseOverlayState extends State<PauseOverlay> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Home Button (Text Button)
+                    // Home Button
                     TextButton(
                       onPressed: () {
-                        widget.game.overlays.remove('Pause');
+                        widget.game.overlays.remove('Win');
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(

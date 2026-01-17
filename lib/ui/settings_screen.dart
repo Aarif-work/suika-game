@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui';
 import 'app_theme.dart';
 import 'widgets/banner_ad_widget.dart';
 
@@ -19,84 +20,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Delete Account',
-          style: TextStyle(
-            color: Color(0xFFe76f51),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: Color(0xFF6d6875),
-                fontWeight: FontWeight.w600,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.5)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFED4956).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_forever_rounded,
+                      color: Color(0xFFED4956),
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Delete Account',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.textDark,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Are you sure you want to delete your account? This action cannot be undone.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.textDark.withOpacity(0.6),
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Color(0xFF6d6875),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showVerifyingAndDeleteDialog();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFED4956),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Add delete account logic here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Account deletion requested')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFe76f51),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  void _showLinkedInDialog() {
-    const linkedInUrl = 'https://www.linkedin.com/in/mohammad-aarif-321369306/';
+
+
+  void _showVerifyingAndDeleteDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'LinkedIn Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(linkedInUrl),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Clipboard.setData(const ClipboardData(text: linkedInUrl));
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('LinkedIn URL copied!')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2a9d8f),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Copy URL'),
+      barrierDismissible: false,
+      builder: (context) => _VerifyingDeleteDialog(
+        onFinalConfirm: () {
+          // Add your actual full account deletion logic here
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account permanently deleted!'),
+              backgroundColor: Color(0xFFED4956),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -208,129 +246,184 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 20),
                             _SettingsSection(
-                              title: 'Account',
-                              icon: Icons.person,
+                              title: 'About',
+                              icon: Icons.info,
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: _showDeleteAccountDialog,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFFe76f51),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    children: [
+                                      // 1. Game Logo & Info Card
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.5),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: AppTheme.primaryOrange.withOpacity(0.1)),
                                         ),
-                                        elevation: 4,
+                                        child: Column(
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(16),
+                                              child: Image.asset(
+                                                'assets/game logo.png',
+                                                width: 80,
+                                                height: 80,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                              'Suika Game',
+                                              style: TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w900,
+                                                color: AppTheme.textDark,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Version 1.0.0',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppTheme.textDark.withOpacity(0.4),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      child: const Row(
+                                      const SizedBox(height: 24),
+
+                                      // 2. Company & Developer Branding
+                                      Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.delete_forever_rounded, size: 24),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'DELETE ACCOUNT',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                          Image.asset(
+                                            'assets/h3 logo.png',
+                                            width: 32,
+                                            height: 32,
+                                            fit: BoxFit.contain,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Container(
+                                            height: 30,
+                                            width: 1,
+                                            color: AppTheme.textDark.withOpacity(0.1),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Hope3 Services',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.textDark,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Developed by Mohamed Aarif A',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppTheme.primaryOrange,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ),
+                                      const SizedBox(height: 24),
+
+                                      // 3. Footer
+                                      Text(
+                                        'Made with Flutter & Flame',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppTheme.textDark.withOpacity(0.3),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 20),
                             _SettingsSection(
-                              title: 'About',
-                              icon: Icons.info,
+                              title: 'Account',
+                              icon: Icons.person,
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      const Text(
-                                        'Version 1.0.0',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textDark,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'A fun physics-based merge puzzle game.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppTheme.textDark.withOpacity(0.7),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.favorite,
-                                            color: AppTheme.primaryOrange,
-                                            size: 20,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Avatar Placeholder
+                                        Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primaryOrange.withOpacity(0.15),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: AppTheme.primaryOrange.withOpacity(0.3), width: 2),
                                           ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Hope3 Service',
+                                          child: const Icon(Icons.person, color: AppTheme.primaryOrange, size: 28),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        // User Info
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Mohamed Aarif A',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppTheme.textDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Age: 19',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: AppTheme.textDark.withOpacity(0.5),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Action
+                                        TextButton(
+                                          onPressed: _showDeleteAccountDialog,
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: const Color(0xFFED4956),
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                          ),
+                                          child: const Text(
+                                            'Delete',
                                             style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.textDark,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w900,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      const Text(
-                                        'Developed by Mohamed Aarif A',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppTheme.textDark,
                                         ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      OutlinedButton.icon(
-                                        onPressed: _showLinkedInDialog,
-                                        icon: const Icon(Icons.link, size: 18),
-                                        label: const Text('LinkedIn'),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: const Color(0xFF0077B5),
-                                          side: const BorderSide(
-                                            color: Color(0xFF0077B5),
-                                            width: 1.5,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        'Made with Flutter & Flame',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppTheme.textDark.withOpacity(0.6),
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
@@ -435,6 +528,200 @@ class _SettingsTile extends StatelessWidget {
           ),
           trailing,
         ],
+      ),
+    );
+  }
+}
+
+class _AboutInfoTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _AboutInfoTile({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textDark.withOpacity(0.6),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerifyingDeleteDialog extends StatefulWidget {
+  final VoidCallback onFinalConfirm;
+
+  const _VerifyingDeleteDialog({required this.onFinalConfirm});
+
+  @override
+  State<_VerifyingDeleteDialog> createState() => _VerifyingDeleteDialogState();
+}
+
+class _VerifyingDeleteDialogState extends State<_VerifyingDeleteDialog> {
+  int _secondsRemaining = 3;
+  bool _isVerifying = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _startVerification();
+  }
+
+  void _startVerification() async {
+    for (int i = 3; i > 0; i--) {
+      if (!mounted) return;
+      setState(() => _secondsRemaining = i);
+      await Future.delayed(const Duration(seconds: 1));
+    }
+    if (!mounted) return;
+    setState(() => _isVerifying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFED4956).withOpacity(0.3)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isVerifying) ...[
+                  const SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFED4956),
+                      strokeWidth: 3,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Verifying Identity...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Step $_secondsRemaining of 3',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textDark.withOpacity(0.5),
+                    ),
+                  ),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFED4956).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFED4956),
+                      size: 44,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'FINAL WARNING',
+                    style: TextStyle(
+                      color: Color(0xFFED4956),
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'This is the last warning. Your account and all progress will be erased forever. You cannot undo this.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            'ABORT',
+                            style: TextStyle(
+                              color: Color(0xFF6d6875),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            widget.onFinalConfirm();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFED4956),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            elevation: 5,
+                            shadowColor: const Color(0xFFED4956).withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'DELETE FOREVER',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

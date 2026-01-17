@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import '../game/suika_game.dart';
 import '../game/components/game_over_overlay.dart';
+import '../game/components/win_overlay.dart';
 import 'pause_overlay.dart';
 import 'enhanced_hud.dart';
 import 'widgets/atmosphere_background.dart';
@@ -89,6 +90,7 @@ class _GameScreenState extends State<GameScreen> {
                           gameFactory: () => game,
                           overlayBuilderMap: {
                             'GameOver': (context, game) => GameOverOverlay(game: game),
+                            'Win': (context, game) => WinOverlay(game: game),
                             'Pause': (context, game) => PauseOverlay(game: game),
                           },
                         ),

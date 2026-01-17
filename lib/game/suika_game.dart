@@ -109,6 +109,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
   int _score = 0;
   int _highScore = 0;
   bool _isGameOver = false;
+  bool _hasWon = false;
   
   int get highScore => _highScore;
 
@@ -231,6 +232,25 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     pauseEngine();
     overlays.add('GameOver');
   }
+
+  void _win() {
+    _hasWon = true;
+    _canDrop = false;
+
+    // Update high score on win too
+    if (_score > _highScore) {
+      _highScore = _score;
+    }
+
+    pauseEngine();
+    overlays.add('Win');
+  }
+
+  void resumeFromWin() {
+    overlays.remove('Win');
+    _canDrop = true;
+    resumeEngine();
+  }
   
   void reset() {
     // Remove all fruits
@@ -242,6 +262,7 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
     _score = 0;
     _comboCount = 0;
     _isGameOver = false;
+    _hasWon = false;
     _canDrop = true;
     _merges.clear();
     _remainingTime = gameMode.durationSeconds?.toDouble();
@@ -399,6 +420,11 @@ class SuikaGame extends Forge2DGame with PanDetector, MouseMovementDetector {
         try {
           FlameAudio.play(nextType.audioFile);
         } catch (e) {}
+
+        // Check for Win (Reached Max Fruit)
+        if (nextIndex == FruitType.values.length - 1 && !_hasWon) {
+          _win();
+        }
       }
     }
     _merges.clear();
